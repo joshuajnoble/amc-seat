@@ -10,7 +10,7 @@ import PWM
 
 from flask_sockets import Sockets #get us some websocket goodness
 
-playProcess
+playProcess = 0
 
 onTime = 50
 offTime = 50
