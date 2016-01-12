@@ -1,5 +1,5 @@
 from flask import Flask
-
+from omxplayer import OMXPlayer
 import RPi.GPIO as GPIO
 import subprocess
 
@@ -8,7 +8,7 @@ import atexit
 import Adafruit_I2C
 import PWM
 
-from flask_sockets import Sockets #get us some websocket goodness
+from flask.ext.socketio  import SocketIO, emit #get us some websocket goodness
 
 playProcess
 
@@ -40,6 +40,7 @@ proxSensor2 = Adafruit_I2C(VCNL4010_I2CADDR_DEFAULT)
 
 ledDriver = PWM()
 
+connections = []
 
 ########################################################################
 # sockets
@@ -48,26 +49,37 @@ ledDriver = PWM()
 app = Flask(__name__)
 socketio = SocketIO(app)
 
-def on_message(ws, message):
+@socketio.on("show_1")
+def on_message(message):
+
+	if(message['data'] == '1'):
+		if(player):
+			player.quit()
+		player = OMXPlayer("path/to/file.mp4")
+	
+	else:
+		#this sends to everyone, let them figure out who needs what
+		emit('show_2', message, broadcast=True)
+
+	print message
+
+
+@socketio.on("show_2")
+def on_message(message):
+
+	if(message['data'] == '1'):
+		if(player):
+			player.quit()
+		player = OMXPlayer("path/to/file.mp4")
+	
+	else:
+		#this sends to everyone, let them figure out who needs what
+		emit('show_2', message, broadcast=True)
+
+	print message
 
 
 
-    if( message == "light1" ):
-        ledDriver.setPWM(1, onTime, offTime) # params 1,2 are on,off? in millis?
-
-    if( message == "light2" ):
-        ledDriver.setPWM(2, onTime, offTime) # params 1,2 are on,off? in millis?
-
-    if( message == "show_1"):
-        playProcess=subprocess.Popen(['omxplayer','-b','Desktop/videos/loop/loop.mp4'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE, close_fds=True)
-
-    if( message == "show_2"):
-        playProcess=subprocess.Popen(['omxplayer','-b','Desktop/videos/loop/loop.mp4'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE, close_fds=True)
-
-    if( message == "show_3"):
-        playProcess=subprocess.Popen(['omxplayer','-b','Desktop/videos/loop/loop.mp4'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE, close_fds=True)
-
-    print message
 
 # set up the routes for the app, needs static file serving
 @app.route("/")
@@ -88,6 +100,20 @@ def checkI2C():
 
     with dataLock:
         #set flags for the i2c events detected
+		lowbyte = proxSensor1.readU8(0x5F)
+		highbyte = proxSensor1.readU8(0x5E)
+		byte1 = (highbyte << 3) | lowbyte
+		lowbyte = proxSensor2.readU8(0x5F)
+		highbyte = proxSensor2.readU8(0x5E)
+		byte2 = (highbyte << 3) | lowbyte
+		
+		if byte1 < 100: #no idea yet
+			commonDataStruct[0] = 1
+
+		if byte2 < 100:
+			commonDataStruct[1] = 1
+
+	
 
     i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())
     i2cThread.start()
@@ -102,6 +128,32 @@ def threadStart():
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
     threadStart()
+
+
+	while 1:
+		if( commonDataStruct[0] == 1 ): #did we get a trigger
+			#turn PWM up
+			ledDriver.setPWM(1, led1Timing, led1Timing)
+			led1Timing -= 2
+			if led1Timing == 0:
+				commonDataStruct[0] = 0
+
+
+		if( commonDataStruct[1] == 1 ): #did we get a trigger
+			#turn PWM up
+			ledDriver.setPWM(2, led2Timing, led2Timing)
+			led2Timing -= 2
+			if led2Timing == 0:
+				commonDataStruct[1] = 0
+
+
+		sleep(0.1)
+
+		
+
+
+
+
 
     # When you kill Flask (SIGTERM), clear the trigger for the next thread
     atexit.register(interrupt)
