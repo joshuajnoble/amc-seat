@@ -5,9 +5,9 @@ import subprocess
 
 import threading
 import atexit
-import Adafruit_I2C
-import PWM
-
+from Adafruit_I2C import Adafruit_I2C
+from PWM import PWM
+ 
 from flask.ext.socketio  import SocketIO, emit #get us some websocket goodness
 
 player = 0
@@ -49,8 +49,12 @@ connections = []
 app = Flask(__name__)
 socketio = SocketIO(app)
 
+@socketio.on("test")
+def test(message):
+    print message + ' '  + str(message['data'])
+
 @socketio.on("show_1")
-def on_message(message):
+def show_1(message):
 
 	if(message['data'] == '1'):
 		if(player):
@@ -65,7 +69,7 @@ def on_message(message):
 
 
 @socketio.on("show_2")
-def on_message(message):
+def show_2(message):
 
 	if(message['data'] == '1'):
 		if(player):
@@ -82,13 +86,18 @@ def on_message(message):
 
 
 # set up the routes for the app, needs static file serving
-@app.route("/")
-def hello():
-    return "You're a client"
+#@app.route("/")
+#def index():
+#    return "You're a client"
 
 @app.route("/ui")
-def hello():
-    return "This is the UI"
+def ui():
+    return app.send_static_file("ui.html");
+
+@app.route('/<path:path>')
+def static_proxy(path):
+    return app.send_static_file(path)
+
 
 def interrupt():
     global i2cThread
@@ -99,7 +108,7 @@ def checkI2C():
     global i2cThread
 
     with dataLock:
-        #set flags for the i2c events detected
+        """        #set flags for the i2c events detected
 		lowbyte = proxSensor1.readU8(0x5F)
 		highbyte = proxSensor1.readU8(0x5E)
 		byte1 = (highbyte << 3) | lowbyte
@@ -112,7 +121,7 @@ def checkI2C():
 
 		if byte2 < 100:
 			commonDataStruct[1] = 1
-
+        """
 	
 
     i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())
