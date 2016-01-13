@@ -49,8 +49,17 @@ connections = []
 app = Flask(__name__)
 socketio = SocketIO(app)
 
-@socketio.on("test")
-def test(message):
+@socketio.on_error()
+def error_handler(e):
+    print e
+
+@socketio.on("connect")
+def connect():
+    print "connected"
+
+@socketio.on('test')
+def test_handler(message):
+    print "TEST WORKS"
     print message + ' '  + str(message['data'])
 
 @socketio.on("show_1")
