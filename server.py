@@ -130,7 +130,7 @@ if __name__ == "__main__":
     threadStart()
 
 
-	while 1:
+    while 1:
 		if( commonDataStruct[0] == 1 ): #did we get a trigger
 			#turn PWM up
 			ledDriver.setPWM(1, led1Timing, led1Timing)
