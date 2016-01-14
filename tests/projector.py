@@ -45,7 +45,7 @@ GP2Y0E02B = 0x40
 proxSensor1 = Adafruit_I2C(GP2Y0E02B)
 #proxSensor2 = Adafruit_I2C(VCNL4010_I2CADDR_DEFAULT)
 
-ledDriver = PWM()
+#ledDriver = PWM()
 
 def interrupt():
   global i2cThread
