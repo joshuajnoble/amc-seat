@@ -1,10 +1,11 @@
 from socketIO_client import SocketIO, LoggingNamespace
 
+import RPi.GPIO as GPIO
+
+GPIO.setmode(GPIO.BOARD)
+
 import thread
 import time
-
-from Adafruit_I2C import Adafruit_I2C
-from PWM import PWM
 
 
 ID = 2 #what ID am I?
@@ -18,11 +19,11 @@ VIDEO_FILE_1 = '/opt/vc/src/hello_pi/hello_video/test.h264'
 # gpio
 ############################################################
 
-PROJECTOR_ON_OFF = 5
-PROJECTOR_MENU = 6
-AUDIO_LED = 25
-AUDIO_PLUG_DETECT = 12
-SEAT_OCCUPANCY = 22
+PROJECTOR_ON_OFF = 29 #gpio5
+PROJECTOR_MENU = 31 #GPIO6
+AUDIO_LED = 22 #GPIO25
+AUDIO_PLUG_DETECT = 32 #GPIO12
+SEAT_OCCUPANCY = 15 #GPIO22
 
 ############################################################
 # pwm via PCA9685
@@ -42,47 +43,10 @@ UPPER_SHELL_BLUE = 10
 GP2Y0E02B = 0x40
 
 
-proxSensor1 = Adafruit_I2C(GP2Y0E02B)
+#proxSensor1 = Adafruit_I2C(GP2Y0E02B)
 #proxSensor2 = Adafruit_I2C(VCNL4010_I2CADDR_DEFAULT)
 
 #ledDriver = PWM()
-
-def interrupt():
-  global i2cThread
-  i2cThread.cancel()
-
-def checkI2C():
-    global commonDataStruct
-    global i2cThread
-
-    with dataLock:
-        """
-      #set flags for the i2c events detected
-      lowbyte = proxSensor1.readU8(0x5F)
-      highbyte = proxSensor1.readU8(0x5E)
-      byte1 = (highbyte << 3) | lowbyte
-      lowbyte = proxSensor2.readU8(0x5F)
-      highbyte = proxSensor2.readU8(0x5E)
-      byte2 = (highbyte << 3) | lowbyte
-
-      if byte1 < 100: #no idea yet
-        commonDataStruct[0] = 1
-
-      if byte2 < 100:
-        commonDataStruct[1] = 1
-        """
-
-
-    i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())
-    i2cThread.start()
-
-def threadStart():
-
-    global i2cThread
-    i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())
-    i2cThread.start()
-
-
 
 ########################################################################
 # websocket
@@ -102,12 +66,13 @@ def on_show_video_1(message):
 
 def on_show_video_2(message):
 
-  if(message['data'] == ID):
+if(message['data'] == ID):
     if(player):
       player.quit()
     player = OMXPlayer("path/to/file.mp4")
 
   print message
+  
 
 
 
@@ -116,17 +81,15 @@ def on_show_video_2(message):
 ########################################################################
 
 def seat_occupied():
-  #what happens here?
+  #todo
 
 def audio_plug_insert():
-  GPIO.output(AUDIO_LED, GPIO.HIGH);
-
-
+  #todo
 
 def start_up():
 
-  GPIO.setup(PROJECTOR_MENU, GPIO.OUT, pull_up_down=GPIO.PUD_DOWN)
-  GPIO.setup(PROJECTOR_ON_OFF, GPIO.OUT, pull_up_down=GPIO.PUD_DOWN)
+  GPIO.setup(PROJECTOR_MENU, GPIO.OUT)
+  GPIO.setup(PROJECTOR_ON_OFF, GPIO.OUT)
   GPIO.setup(AUDIO_LED, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
   GPIO.setup(AUDIO_PLUG_DETECT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
   GPIO.setup(SEAT_OCCUPANCY, GPIO.IN, pull_up_down=GPIO.PUD_UP)
@@ -158,4 +121,4 @@ def start_up():
 
 
 if __name__ == "__main__":
-	startup()
+    start_up()
