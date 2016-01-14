@@ -7,7 +7,7 @@ import threading
 import atexit
 from Adafruit_I2C import Adafruit_I2C
 from PWM import PWM
- 
+
 async_mode = None
 
 if async_mode is None:
@@ -108,7 +108,7 @@ def show_1(message):
 		if(player):
 			player.quit()
 		player = OMXPlayer("path/to/file.mp4")
-	
+
 	else:
 		#this sends to everyone, let them figure out who needs what
 		emit('show_2', message, broadcast=True)
@@ -123,7 +123,7 @@ def show_2(message):
 		if(player):
 			player.quit()
 		player = OMXPlayer("path/to/file.mp4")
-	
+
 	else:
 		#this sends to everyone, let them figure out who needs what
 		emit('show_2', message, broadcast=True)
@@ -163,14 +163,14 @@ def checkI2C():
 		lowbyte = proxSensor2.readU8(0x5F)
 		highbyte = proxSensor2.readU8(0x5E)
 		byte2 = (highbyte << 3) | lowbyte
-		
+
 		if byte1 < 100: #no idea yet
 			commonDataStruct[0] = 1
 
 		if byte2 < 100:
 			commonDataStruct[1] = 1
         """
-	
+
 
     i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())
     i2cThread.start()
@@ -181,6 +181,56 @@ def threadStart():
     i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())
     i2cThread.start()
 
+
+
+def seat_occupied():
+  #what happens here?
+
+def audio_plug_insert():
+  GPIO.output(AUDIO_LED, GPIO.HIGH);
+
+
+########################################################################
+# gpio
+########################################################################
+
+def seat_occupied():
+  #what happens here?
+
+def audio_plug_insert():
+  GPIO.output(AUDIO_LED, GPIO.HIGH);
+
+
+
+def start_up():
+
+  GPIO.setup(PROJECTOR_MENU, GPIO.OUT, pull_up_down=GPIO.PUD_DOWN)
+  GPIO.setup(PROJECTOR_ON_OFF, GPIO.OUT, pull_up_down=GPIO.PUD_DOWN)
+  GPIO.setup(AUDIO_LED, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+  GPIO.setup(AUDIO_PLUG_DETECT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+  GPIO.setup(SEAT_OCCUPANCY, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+  GPIO.add_event_detect(SEAT_OCCUPANCY, GPIO.FALLING, callback=seat_occupied, bouncetime=200)
+  GPIO.add_event_detect(AUDIO_PLUG_DETECT, GPIO.FALLING, callback=audio_plug_insert, bouncetime=200)
+
+  GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH);
+  sleep(10.0)
+  #pulse 3 times to select HDMI
+  GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
+  sleep(0.5)
+  GPIO.output(PROJECTOR_MENU, GPIO.LOW);
+  sleep(0.5)
+  GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
+  sleep(0.5)
+  GPIO.output(PROJECTOR_MENU, GPIO.LOW);
+  sleep(0.5)
+  GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
+  sleep(0.5)
+  GPIO.output(PROJECTOR_MENU, GPIO.LOW);
+  sleep(0.5)
+
+  #now what?
+  print "started"
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
@@ -206,7 +256,7 @@ if __name__ == "__main__":
 
 		sleep(0.1)
 
-		
+
 
 
 
