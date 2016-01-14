@@ -1,5 +1,4 @@
-from socketIO_client
-import SocketIO, LoggingNamespace
+from socketIO_client import SocketIO, LoggingNamespace
 
 import RPi.GPIO as GPIO
 
@@ -57,7 +56,7 @@ def on_show_video_1(message):
             player.quit()
         player = OMXPlayer(VIDEO_FILE_1)
 
-print message
+    print message
 
 
 def on_show_video_2(message):
@@ -67,16 +66,18 @@ def on_show_video_2(message):
             player.quit()
         player = OMXPlayer("path/to/file.mp4")
 
-print message
+    print message
 
 
 
 
 ######################################################################### gpio########################################################################
 
-def seat_occupied(): #todo
+def seat_occupied():
+    #todo
 
-def audio_plug_insert(): #todo
+def audio_plug_insert():
+    #todo
 
 def start_up():
 
