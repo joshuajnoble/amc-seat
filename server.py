@@ -57,6 +57,10 @@ def error_handler(e):
 def connect():
     print "connected"
 
+@socketio.on('message')
+def message_handler():
+    print "message works ok"
+
 @socketio.on('test')
 def test_handler(message):
     print "TEST WORKS"
@@ -145,8 +149,10 @@ def threadStart():
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
+    
+    socketio.run(app)
+    """
     threadStart()
-
 
     while 1:
 		if( commonDataStruct[0] == 1 ): #did we get a trigger
@@ -172,6 +178,6 @@ if __name__ == "__main__":
 
 
 
-
     # When you kill Flask (SIGTERM), clear the trigger for the next thread
     atexit.register(interrupt)
+    """

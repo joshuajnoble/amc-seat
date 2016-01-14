@@ -27,7 +27,7 @@
         $(document).ready( function() {
 	  	    $( '.startBtn' ).click(function() {
                 console.log("ok");
-		        socket.emit('test', {data:"start!"});
+		        socket.send('test');
 		    });
         });
 
