@@ -140,9 +140,9 @@ def show_2(message):
 
 @app.route("/ui")
 def ui():
-    return app.send_static_file("ui.html");
+    return app.render_template("ui.html");
 
-@app.route('/<path:path>')
+@app.route('/')
 def static_proxy(path):
     return app.send_static_file(path)
 
