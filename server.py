@@ -9,37 +9,11 @@ from Adafruit_I2C import Adafruit_I2C
 from PWM import PWM
  
 async_mode = None
-
-if async_mode is None:
-    try:
-        import eventlet
-        async_mode = 'eventlet'
-        print "using eventlet"
-    except ImportError:
-        pass
-
-    if async_mode is None:
-        try:
-            from gevent import monkey
-            async_mode = 'gevent'
-            print "using gevent"
-        except ImportError:
-            pass
-
-    if async_mode is None:
-        print "threading"
-        async_mode = 'threading'
-
-    print('async_mode is ' + async_mode)
-
 # monkey patching is necessary because this application uses a background
 # thread
-if async_mode == 'eventlet':
-    import eventlet
-    eventlet.monkey_patch()
-elif async_mode == 'gevent':
-    from gevent import monkey
-    monkey.patch_all()
+
+import eventlet
+eventlet.monkey_patch()
 
 import time
 from threading import Thread
@@ -86,7 +60,7 @@ connections = []
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app, async_mode=async_mode)
+socketio = SocketIO(app, async_mode='eventlet')
 
 @socketio.on_error()
 def error_handler(e):
@@ -95,10 +69,6 @@ def error_handler(e):
 @socketio.on("connect")
 def connect():
     print "connected"
-
-@socketio.on('message')
-def message_handler():
-    print "message works ok"
 
 @socketio.on('test')
 def test_handler(message):
@@ -142,11 +112,11 @@ def show_2(message):
 #def index():
 #    return "You're a client"
 
-@app.route("/ui")
-def ui():
-    return app.render_template("ui.html");
+@app.route('/ui') #this doesn't work, goes to '/ui/' and 404s
+def route_ui():
+    return render_template('ui.html');
 
-@app.route('/')
+@app.route('/client')
 def static_proxy():
     return "You're a client"
 
@@ -187,10 +157,8 @@ def threadStart():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0')
     
-    socketio.run(app)
-    """
+    socketio.run(app, debug=True, host='0.0.0.0')
     threadStart()
 
     while 1:
@@ -219,4 +187,3 @@ if __name__ == "__main__":
 
     # When you kill Flask (SIGTERM), clear the trigger for the next thread
     atexit.register(interrupt)
-    """
