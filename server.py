@@ -143,8 +143,8 @@ def ui():
     return app.render_template("ui.html");
 
 @app.route('/')
-def static_proxy(path):
-    return app.send_static_file(path)
+def static_proxy():
+    return "You're a client"
 
 
 def interrupt():
