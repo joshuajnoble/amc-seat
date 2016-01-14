@@ -14,8 +14,8 @@
       #messages li:nth-child(odd) { background: #eee; }
     </style>
 
-    <script src="socket.io-1.4.3.js"></script>
-    <script src="jquery-2.2.0.min.js"></script>
+    <script src="static/socket.io-1.4.3.js"></script>
+    <script src="static/jquery-2.2.0.min.js"></script>
 	<script>
 	  var socket = io("192.168.42.1:5000");
 
@@ -23,7 +23,6 @@
             console.log(" connected ");
         });
 
-        console.log("fucking work");
         $(document).ready( function() {
 	  	    $( '.startBtn' ).click(function() {
                 console.log("ok");
