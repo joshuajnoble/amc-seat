@@ -90,7 +90,7 @@ amcServerIP = '192.168.42.1'
 
 def on_show_video_1(message):
 
-  if(message['data'] == ID):
+  if(message['id'] == ID):
     if(player):
       player.quit()
     player = OMXPlayer("path/to/file.mp4")
@@ -100,12 +100,26 @@ def on_show_video_1(message):
 
 def on_show_video_2(message):
 
-  if(message['data'] == ID):
+  if(message['id'] == ID):
     if(player):
       player.quit()
     player = OMXPlayer("path/to/file.mp4")
 
   print message
+
+def set_color(message):
+
+	if(message['id'] == ID):
+		# huh?
+		PWM.setPWM(UPPER_SHELL_RED, message['red'], 100 - message['red'])
+		PWM.setPWM(UPPER_SHELL_GREEN, message['green'], 100 - message['green'])
+		PWM.setPWM(UPPER_SHELL_BLUE, message['blue'], 100 - message['blue'])
+
+	else:
+		#this sends to everyone, let them figure out who needs what
+		emit('set_color', message, broadcast=True)
+
+	print message
 
 
 

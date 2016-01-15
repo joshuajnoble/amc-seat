@@ -22,6 +22,8 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, \
     close_room, rooms, disconnect
 
 
+ID = 1
+
 player = 0
 
 onTime = 50
@@ -54,6 +56,27 @@ ledDriver = PWM()
 
 connections = []
 
+############################################################
+# gpio
+############################################################
+
+PROJECTOR_ON_OFF = 5
+PROJECTOR_MENU = 6
+AUDIO_LED = 25
+AUDIO_PLUG_DETECT = 12
+SEAT_OCCUPANCY = 22
+
+############################################################
+# pwm via PCA9685
+############################################################
+
+CUPHOLDER_PWM = 12
+UNDER_SEAT_PWM = 0
+UPPER_SHELL_RED = 8
+UPPER_SHELL_GREEN = 9
+UPPER_SHELL_BLUE = 10
+
+
 ########################################################################
 # sockets
 ########################################################################
@@ -75,10 +98,25 @@ def test_handler(message):
     print "TEST WORKS"
     print message + ' '  + str(message['data'])
 
+@socketio.on("set_color")
+def set_color(message):
+
+	if(message['id'] == ID):
+		# huh?
+		PWM.setPWM(UPPER_SHELL_RED, message['red'], 100 - message['red'])
+		PWM.setPWM(UPPER_SHELL_GREEN, message['green'], 100 - message['green'])
+		PWM.setPWM(UPPER_SHELL_BLUE, message['blue'], 100 - message['blue'])
+
+	else:
+		#this sends to everyone, let them figure out who needs what
+		emit('set_color', message, broadcast=True)
+
+	print message
+
 @socketio.on("show_1")
 def show_1(message):
 
-	if(message['data'] == '1'):
+	if(message['id'] == ID):
 		if(player):
 			player.quit()
 		player = OMXPlayer("path/to/file.mp4")
@@ -93,7 +131,7 @@ def show_1(message):
 @socketio.on("show_2")
 def show_2(message):
 
-	if(message['data'] == '1'):
+	if(message['id'] == ID):
 		if(player):
 			player.quit()
 		player = OMXPlayer("path/to/file.mp4")
