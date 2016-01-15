@@ -34,7 +34,7 @@ offTime = 50
 POOL_TIME = 0.05 #Seconds for polling
 
 # this is where the flags coming from the two motion sensors
-commonDataStruct = {}
+proximityFlag = 0 
 # lock to control access to variable
 dataLock = threading.Lock()
 # thread handler
@@ -48,7 +48,6 @@ i2cThread = threading.Thread()
 GP2Y0E02B = 0x40
 
 proxSensor1 = Adafruit_I2C(GP2Y0E02B)
-#proxSensor2 = Adafruit_I2C(GP2Y0E02B)
 
 ledDriver = PWM()
 
@@ -105,13 +104,6 @@ def show_2(message):
 	print message
 
 
-
-
-# set up the routes for the app, needs static file serving
-#@app.route("/")
-#def index():
-#    return "You're a client"
-
 @app.route('/ui') #this doesn't work, goes to '/ui/' and 404s
 def route_ui():
     return render_template('ui.html');
@@ -126,11 +118,11 @@ def interrupt():
     i2cThread.cancel()
 
 def checkI2C():
-    global commonDataStruct
+    global proximityFlag
     global i2cThread
 
     with dataLock:
-        """        #set flags for the i2c events detected
+        #set flags for the i2c events detected
 		lowbyte = proxSensor1.readU8(0x5F)
 		highbyte = proxSensor1.readU8(0x5E)
 		byte1 = (highbyte << 3) | lowbyte
@@ -138,12 +130,8 @@ def checkI2C():
 		highbyte = proxSensor2.readU8(0x5E)
 		byte2 = (highbyte << 3) | lowbyte
 
-		if byte1 < 100: #no idea yet
-			commonDataStruct[0] = 1
-
-		if byte2 < 100:
-			commonDataStruct[1] = 1
-        """
+		if byte1 < 400: #anything closer?
+			proximityFlag[0] = 1
 
 
     i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())
@@ -156,55 +144,58 @@ def threadStart():
     i2cThread.start()
 
 
-
-def seat_occupied():
-  #what happens here?
-
-def audio_plug_insert():
-  GPIO.output(AUDIO_LED, GPIO.HIGH);
-
-
 ########################################################################
 # gpio
 ########################################################################
 
 def seat_occupied():
-  #what happens here?
+    #what happens here?
 
 def audio_plug_insert():
-  GPIO.output(AUDIO_LED, GPIO.HIGH);
+    GPIO.output(AUDIO_LED, GPIO.HIGH);
 
 
 
 def start_up():
 
-  GPIO.setup(PROJECTOR_MENU, GPIO.OUT, pull_up_down=GPIO.PUD_DOWN)
-  GPIO.setup(PROJECTOR_ON_OFF, GPIO.OUT, pull_up_down=GPIO.PUD_DOWN)
-  GPIO.setup(AUDIO_LED, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-  GPIO.setup(AUDIO_PLUG_DETECT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-  GPIO.setup(SEAT_OCCUPANCY, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(PROJECTOR_MENU, GPIO.OUT)
+    GPIO.setup(PROJECTOR_ON_OFF, GPIO.OUT)
+    GPIO.setup(AUDIO_LED, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
+    GPIO.setup(AUDIO_PLUG_DETECT, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+    GPIO.setup(SEAT_OCCUPANCY, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 
-  GPIO.add_event_detect(SEAT_OCCUPANCY, GPIO.FALLING, callback=seat_occupied, bouncetime=200)
-  GPIO.add_event_detect(AUDIO_PLUG_DETECT, GPIO.FALLING, callback=audio_plug_insert, bouncetime=200)
+    #GPIO.add_event_detect(SEAT_OCCUPANCY, GPIO.FALLING, callback = seat_occupied, bouncetime = 200)
+    #GPIO.add_event_detect(AUDIO_PLUG_DETECT, GPIO.FALLING, callback = audio_plug_insert, bouncetime = 200)
+    GPIO.output(PROJECTOR_MENU, GPIO.LOW)
+    GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH)
+    sleep(1.0)
+    GPIO.output(PROJECTOR_ON_OFF, GPIO.LOW)
+    sleep(25.0)
+    # pulse 3 times to select HDMIi
+    print "pulse for hdmi"
+    GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
+    sleep(0.7)
+    GPIO.output(PROJECTOR_MENU, GPIO.LOW);
+    sleep(0.7)
+    GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
+    sleep(0.7)
+    GPIO.output(PROJECTOR_MENU, GPIO.LOW);
+    sleep(0.7)
+    GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
+    sleep(0.7)
+    GPIO.output(PROJECTOR_MENU, GPIO.LOW);
+    sleep(3)
 
-  GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH);
-  sleep(10.0)
-  #pulse 3 times to select HDMI
-  GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
-  sleep(0.5)
-  GPIO.output(PROJECTOR_MENU, GPIO.LOW);
-  sleep(0.5)
-  GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
-  sleep(0.5)
-  GPIO.output(PROJECTOR_MENU, GPIO.LOW);
-  sleep(0.5)
-  GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
-  sleep(0.5)
-  GPIO.output(PROJECTOR_MENU, GPIO.LOW);
-  sleep(0.5)
+    player = OMXPlayer(VIDEO_FILE_1)
+    player.play()
+    # now what ?
+    print "started"
+    sleep(5)
 
-  #now what?
-  print "started"
+    player.quit()
+    GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH)
+    sleep(3.0)
+    GPIO.output(PROJECTOR_ON_OFF, GPIO.LOW)
 
 if __name__ == "__main__":
     
@@ -212,27 +203,14 @@ if __name__ == "__main__":
     threadStart()
 
     while 1:
-		if( commonDataStruct[0] == 1 ): #did we get a trigger
+		if( proximityFlag == 1 ): #did we get a trigger
 			#turn PWM up
 			ledDriver.setPWM(1, led1Timing, led1Timing)
 			led1Timing -= 2
 			if led1Timing == 0:
-				commonDataStruct[0] = 0
-
-
-		if( commonDataStruct[1] == 1 ): #did we get a trigger
-			#turn PWM up
-			ledDriver.setPWM(2, led2Timing, led2Timing)
-			led2Timing -= 2
-			if led2Timing == 0:
-				commonDataStruct[1] = 0
-
+				proximityFlag = 0
 
 		sleep(0.1)
-
-
-
-
 
 
     # When you kill Flask (SIGTERM), clear the trigger for the next thread

@@ -1,7 +1,10 @@
 
 from Adafruit_I2C import Adafruit_I2C
 import time
+import threading
 from threading import Thread
+
+dataLock = threading.Lock()
 
 # this is where the flags coming from the two motion sensors
 commonDataStruct = {}
@@ -34,8 +37,6 @@ def checkI2C():
         if byte1 < 100: #no idea yet
             commonDataStruct[0] = 1
 
-        if byte2 < 100:
-            commonDataStruct[1] = 1
 
 
     i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())

@@ -1,11 +1,11 @@
 from socketIO_client import SocketIO, LoggingNamespace
-
+from omxplayer import OMXPlayer
 import RPi.GPIO as GPIO
 
 GPIO.setmode(GPIO.BOARD)
 
 import thread
-import time
+from time import sleep
 
 
 ID = 2# what ID am I ?
@@ -35,7 +35,9 @@ UPPER_SHELL_RED = 8
 UPPER_SHELL_GREEN = 9
 UPPER_SHELL_BLUE = 10
 
-############################################################# i2c############################################################
+############################################################ 
+#i2c
+############################################################
 
 # prox detection address
 GP2Y0E02B = 0x40
@@ -45,7 +47,9 @@ GP2Y0E02B = 0x40
 
 # ledDriver = PWM()
 
-######################################################################### websocket########################################################################
+########################################################################i
+# websocket
+########################################################################
 
 amcServerIP = '192.168.42.1'
 
@@ -73,11 +77,6 @@ def on_show_video_2(message):
 
 ######################################################################### gpio########################################################################
 
-def seat_occupied():
-    #todo
-
-def audio_plug_insert():
-    #todo
 
 def start_up():
 
@@ -87,29 +86,40 @@ def start_up():
     GPIO.setup(AUDIO_PLUG_DETECT, GPIO.IN, pull_up_down = GPIO.PUD_UP)
     GPIO.setup(SEAT_OCCUPANCY, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 
-    GPIO.add_event_detect(SEAT_OCCUPANCY, GPIO.FALLING, callback = seat_occupied, bouncetime = 200)
-    GPIO.add_event_detect(AUDIO_PLUG_DETECT, GPIO.FALLING, callback = audio_plug_insert, bouncetime = 200)
-
-    GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH);
-    sleep(10.0)# pulse 3 times to select HDMI
+    #GPIO.add_event_detect(SEAT_OCCUPANCY, GPIO.FALLING, callback = seat_occupied, bouncetime = 200)
+    #GPIO.add_event_detect(AUDIO_PLUG_DETECT, GPIO.FALLING, callback = audio_plug_insert, bouncetime = 200)
+    GPIO.output(PROJECTOR_MENU, GPIO.LOW)
+    GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH)
+    sleep(1.0)
+    GPIO.output(PROJECTOR_ON_OFF, GPIO.LOW)
+    sleep(25.0)
+    # pulse 3 times to select HDMIi
+    print "pulse for hdmi"
     GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
-    sleep(0.5)
+    sleep(0.7)
     GPIO.output(PROJECTOR_MENU, GPIO.LOW);
-    sleep(0.5)
+    sleep(0.7)
     GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
-    sleep(0.5)
+    sleep(0.7)
     GPIO.output(PROJECTOR_MENU, GPIO.LOW);
-    sleep(0.5)
+    sleep(0.7)
     GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
-    sleep(0.5)
+    sleep(0.7)
     GPIO.output(PROJECTOR_MENU, GPIO.LOW);
     sleep(3)
 
     player = OMXPlayer(VIDEO_FILE_1)
-
+    player.play()
     # now what ?
     print "started"
+    sleep(5)
 
+    player.quit()
+    GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH)
+    sleep(3.0)
+    GPIO.output(PROJECTOR_ON_OFF, GPIO.LOW)
+
+    
 
 
 if __name__ == "__main__":
