@@ -130,9 +130,7 @@ def seat_occupied():
     #what happens here?
 
 def audio_plug_insert():
-    GPIO.output(AUDIO_LED, GPIO.HIGH);
-    
-
+    GPIO.output(AUDIO_LED, GPIO.HIGH)
 
 def start_up():
 
@@ -145,20 +143,20 @@ def start_up():
     GPIO.add_event_detect(SEAT_OCCUPANCY, GPIO.FALLING, callback=seat_occupied, bouncetime=200) 
     GPIO.add_event_detect(AUDIO_PLUG_DETECT, GPIO.FALLING, callback=audio_plug_insert, bouncetime=200)
 
-    GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH);
+    GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH)
     sleep(10.0)
     #pulse 3 times to select HDMI
-    GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
+    GPIO.output(PROJECTOR_MENU, GPIO.HIGH)
     sleep(0.5)
-    GPIO.output(PROJECTOR_MENU, GPIO.LOW);
+    GPIO.output(PROJECTOR_MENU, GPIO.LOW)
     sleep(0.5)
-    GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
+    GPIO.output(PROJECTOR_MENU, GPIO.HIGH)
     sleep(0.5)
-    GPIO.output(PROJECTOR_MENU, GPIO.LOW);
+    GPIO.output(PROJECTOR_MENU, GPIO.LOW)
     sleep(0.5)
-    GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
+    GPIO.output(PROJECTOR_MENU, GPIO.HIGH)
     sleep(0.5)
-    GPIO.output(PROJECTOR_MENU, GPIO.LOW);
+    GPIO.output(PROJECTOR_MENU, GPIO.LOW)
     sleep(0.5)
 
     #now what?
