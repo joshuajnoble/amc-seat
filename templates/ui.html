@@ -41,7 +41,7 @@
               var colors = [parseInt(color.r), parseInt(color.g), parseInt(color.b)]
               //onchange_el.css("background", color.hex).text("RGB:"+colors.join(", "))
               console.log(colors);
-              socket.emit('color', {data:'ok'});
+              socket.emit('set_color', {id:1, red:colors[0], green:colors[1], blue:colors[2]});
             });
 
         });

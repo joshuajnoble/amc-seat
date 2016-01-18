@@ -18,8 +18,7 @@ eventlet.monkey_patch()
 import time
 from threading import Thread
 from flask import Flask, render_template, session, request
-from flask_socketio import SocketIO, emit, join_room, leave_room, \
-    close_room, rooms, disconnect
+from flask_socketio import SocketIO, emit, disconnect
 
 
 ID = 1
@@ -102,9 +101,9 @@ def set_color(message):
 
 	if(message['id'] == ID):
 		# huh?
-		PWM.setPWM(UPPER_SHELL_RED, message['red'], 100 - message['red'])
-		PWM.setPWM(UPPER_SHELL_GREEN, message['green'], 100 - message['green'])
-		PWM.setPWM(UPPER_SHELL_BLUE, message['blue'], 100 - message['blue'])
+		ledDriver.setPWM(UPPER_SHELL_RED, message['red'], 100 - message['red'])
+		ledDriver.setPWM(UPPER_SHELL_GREEN, message['green'], 100 - message['green'])
+		ledDriver.setPWM(UPPER_SHELL_BLUE, message['blue'], 100 - message['blue'])
 
 	else:
 		#this sends to everyone, let them figure out who needs what
@@ -122,7 +121,7 @@ def show_1(message):
 
 	else:
 		#this sends to everyone, let them figure out who needs what
-		emit('show_2', message, broadcast=True)
+		emit('show_1', message, broadcast=True)
 
 	print message
 
@@ -187,6 +186,7 @@ def threadStart():
 ########################################################################
 
 def seat_occupied():
+    print "seat occupied"
     #what happens here?
 
 def audio_plug_insert():

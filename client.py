@@ -89,23 +89,22 @@ def threadStart():
 amcServerIP = '192.168.42.1'
 
 def on_show_video_1(message):
+    if(message['id'] == ID):
+        if(player):
+            player.quit()
+        player = OMXPlayer("path/to/file.mp4")
 
-  if(message['id'] == ID):
-    if(player):
-      player.quit()
-    player = OMXPlayer("path/to/file.mp4")
-
-  print message
+    print message
 
 
 def on_show_video_2(message):
 
-  if(message['id'] == ID):
-    if(player):
-      player.quit()
-    player = OMXPlayer("path/to/file.mp4")
-
-  print message
+    if(message['id'] == ID):
+        if(player):
+            player.quit()
+        player = OMXPlayer("path/to/file.mp4")
+    
+    print message
 
 def set_color(message):
 
@@ -128,47 +127,48 @@ def set_color(message):
 ########################################################################
 
 def seat_occupied():
-  #what happens here?
+    #what happens here?
+    
 
 def audio_plug_insert():
-  GPIO.output(AUDIO_LED, GPIO.HIGH);
-
+    GPIO.output(AUDIO_LED, GPIO.HIGH);
+    
 
 
 def start_up():
 
-  GPIO.setup(PROJECTOR_MENU, GPIO.OUT, pull_up_down=GPIO.PUD_DOWN)
-  GPIO.setup(PROJECTOR_ON_OFF, GPIO.OUT, pull_up_down=GPIO.PUD_DOWN)
-  GPIO.setup(AUDIO_LED, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-  GPIO.setup(AUDIO_PLUG_DETECT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-  GPIO.setup(SEAT_OCCUPANCY, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(PROJECTOR_MENU, GPIO.OUT, pull_up_down=GPIO.PUD_DOWN)
+    GPIO.setup(PROJECTOR_ON_OFF, GPIO.OUT, pull_up_down=GPIO.PUD_DOWN)
+    GPIO.setup(AUDIO_LED, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    GPIO.setup(AUDIO_PLUG_DETECT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(SEAT_OCCUPANCY, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-  GPIO.add_event_detect(SEAT_OCCUPANCY, GPIO.FALLING, callback=seat_occupied, bouncetime=200)
-  GPIO.add_event_detect(AUDIO_PLUG_DETECT, GPIO.FALLING, callback=audio_plug_insert, bouncetime=200)
+    GPIO.add_event_detect(SEAT_OCCUPANCY, GPIO.FALLING, callback=seat_occupied, bouncetime=200) 
+    GPIO.add_event_detect(AUDIO_PLUG_DETECT, GPIO.FALLING, callback=audio_plug_insert, bouncetime=200)
 
-  GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH);
-  sleep(10.0)
-  #pulse 3 times to select HDMI
-  GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
-  sleep(0.5)
-  GPIO.output(PROJECTOR_MENU, GPIO.LOW);
-  sleep(0.5)
-  GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
-  sleep(0.5)
-  GPIO.output(PROJECTOR_MENU, GPIO.LOW);
-  sleep(0.5)
-  GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
-  sleep(0.5)
-  GPIO.output(PROJECTOR_MENU, GPIO.LOW);
-  sleep(0.5)
+    GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH);
+    sleep(10.0)
+    #pulse 3 times to select HDMI
+    GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
+    sleep(0.5)
+    GPIO.output(PROJECTOR_MENU, GPIO.LOW);
+    sleep(0.5)
+    GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
+    sleep(0.5)
+    GPIO.output(PROJECTOR_MENU, GPIO.LOW);
+    sleep(0.5)
+    GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
+    sleep(0.5)
+    GPIO.output(PROJECTOR_MENU, GPIO.LOW);
+    sleep(0.5)
 
-  #now what?
-  print "started"
+    #now what?
+    print "started"
 
 
 
 if __name__ == "__main__":
-  socketIO = SocketIO('192.168.42.1', 5000, LoggingNamespace)
-  socketIO.on("show_1", on_show_video_1)
-  socketIO.on("show_2", on_show_video_2)
-  socketIO.on("start", start_up)
+    socketIO = SocketIO('192.168.42.1', 5000, LoggingNamespace)
+    socketIO.on("show_1", on_show_video_1)
+    socketIO.on("show_2", on_show_video_2)
+    socketIO.on("start", start_up)
