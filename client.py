@@ -127,7 +127,11 @@ def set_color(message):
 ########################################################################
 
 def seat_occupied():
+<<<<<<< HEAD
     #what happens here?
+=======
+    print "seat occupied"
+>>>>>>> 157db7f18c686fea9e2ce13a5a6a8ca57fec82c6
 
 def audio_plug_insert():
     GPIO.output(AUDIO_LED, GPIO.HIGH)
