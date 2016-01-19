@@ -127,7 +127,7 @@ def show_1(message):
 	if(message['id'] == ID):
 		if(player):
 			player.quit()
-		player = OMXPlayer("/home/pi/2-welcome.m4v")
+		global player = OMXPlayer("/home/pi/2-welcome.m4v")
 
 	else:
 		#this sends to everyone, let them figure out who needs what
@@ -142,7 +142,7 @@ def show_2(message):
 	if(message['id'] == ID):
 		if(player):
 			player.quit()
-		player = OMXPlayer("path/to/file.mp4")
+		global player = OMXPlayer("path/to/file.mp4")
 
 	else:
 		#this sends to everyone, let them figure out who needs what
