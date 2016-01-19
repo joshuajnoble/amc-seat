@@ -14,7 +14,7 @@ onTime = 50
 offTime = 50
 
 VIDEO_FILE_1 = '/opt/vc/src/hello_pi/hello_video/test.h264'
-
+VIDEO_FILE_2 = '/home/pi/2-welcome.m4v'
 ############################################################
 #gpio
 ############################################################
@@ -114,11 +114,13 @@ def start_up():
     print "started"
     sleep(5)
 
-    player.quit()
-    GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH)
+    player.pause()
     sleep(3.0)
-    GPIO.output(PROJECTOR_ON_OFF, GPIO.LOW)
-
+    player.quit()
+    player = OMXPlayer(VIDEO_FILE_2)
+    player.play()
+    sleep(2)
+    player.quit()
     
 
 

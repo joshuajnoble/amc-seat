@@ -54,21 +54,16 @@ def checkI2C():
     global i2cThread
 
     with dataLock:
-        """
+      """
       #set flags for the i2c events detected
       lowbyte = proxSensor1.readU8(0x5F)
       highbyte = proxSensor1.readU8(0x5E)
       byte1 = (highbyte << 3) | lowbyte
-      lowbyte = proxSensor2.readU8(0x5F)
-      highbyte = proxSensor2.readU8(0x5E)
-      byte2 = (highbyte << 3) | lowbyte
 
       if byte1 < 100: #no idea yet
         commonDataStruct[0] = 1
 
-      if byte2 < 100:
-        commonDataStruct[1] = 1
-        """
+      """
 
 
     i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())
@@ -165,7 +160,14 @@ def start_up():
 
 
 if __name__ == "__main__":
+    print "starting up"
     socketIO = SocketIO('192.168.42.1', 5000, LoggingNamespace)
+    print socketIO.connected()
+    while socketIO.connected() == False:
+         print "not connected"
+         sleep(2.0)
+         socketIO = SocketIO('192.168.42.1', 5000, LoggingNamespace)
+
     socketIO.on("show_1", on_show_video_1)
     socketIO.on("show_2", on_show_video_2)
     socketIO.on("start", start_up)
