@@ -206,6 +206,15 @@ def audio_plug_insert():
 
 def start_up():
 
+    
+
+    #player.quit()
+    #GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH)
+    #sleep(3.0)
+    #GPIO.output(PROJECTOR_ON_OFF, GPIO.LOW)
+
+if __name__ == "__main__":
+   
     ledDriver.setPWM(CUPHOLDER_PWM, 4095, 0)
     ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
     ledDriver.setPWM(UPPER_SHELL_RED, 4095, 0)
@@ -241,33 +250,30 @@ def start_up():
     GPIO.add_event_detect(SEAT_OCCUPANCY, GPIO.FALLING, callback = seat_occupied, bouncetime = 200)
     GPIO.add_event_detect(AUDIO_PLUG_DETECT, GPIO.FALLING, callback = audio_plug_insert, bouncetime = 200)
 
-    player = OMXPlayer(VIDEO_FILE_1)
+    global player = OMXPlayer(VIDEO_FILE_1)
     player.play()
     # now what ?
     print "started"
     sleep(1)
     player.pause()
 
-    #player.quit()
-    #GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH)
-    #sleep(3.0)
-    #GPIO.output(PROJECTOR_ON_OFF, GPIO.LOW)
-
-if __name__ == "__main__":
-   
-    start_up() 
     socketio.run(app, debug=True, host='0.0.0.0')
     threadStart()
 
-    while 1:
-		if( proximityFlag == 1 ): #did we get a trigger
-			#turn PWM up
-			ledDriver.setPWM(UNDER_SEAT_PWM, 4095-ledTiming, led1Timing)
-			led1Timing -= 2
-			if led1Timing == 0:
-				proximityFlag = 0 
+    while True:
+		lowbyte = proxSensor1.readU8(0x5F)
+		highbyte = proxSensor1.readU8(0x5E)
+		byte1 = (highbyte << 3) | lowbyte
+		#lowbyte = proxSensor2.readU8(0x5F)
+		#highbyte = proxSensor2.readU8(0x5E)
+		#byte2 = (highbyte << 3) | lowbyte
 
-		sleep(0.1)
+		if byte1 < 200: #anything closer?
+			ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
+		else:
+			ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
+
+		sleep(0.5)
 
 
     # When you kill Flask (SIGTERM), clear the trigger for the next thread
