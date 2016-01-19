@@ -206,10 +206,7 @@ def audio_plug_insert():
 
 
 
-def start_up():
-
-    
-
+#def start_up():
     #player.quit()
     #GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH)
     #sleep(3.0)
