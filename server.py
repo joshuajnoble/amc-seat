@@ -125,9 +125,10 @@ def set_color(message):
 def show_1(message):
 
 	if(message['id'] == ID):
+		global player
 		if(player):
 			player.quit()
-		global player = OMXPlayer("/home/pi/2-welcome.m4v")
+		player = OMXPlayer("/home/pi/2-welcome.m4v")
 
 	else:
 		#this sends to everyone, let them figure out who needs what
@@ -140,9 +141,10 @@ def show_1(message):
 def show_2(message):
 
 	if(message['id'] == ID):
+		global player
 		if(player):
 			player.quit()
-		global player = OMXPlayer("path/to/file.mp4")
+		player = OMXPlayer("path/to/file.mp4")
 
 	else:
 		#this sends to everyone, let them figure out who needs what
@@ -250,7 +252,8 @@ if __name__ == "__main__":
     GPIO.add_event_detect(SEAT_OCCUPANCY, GPIO.FALLING, callback = seat_occupied, bouncetime = 200)
     GPIO.add_event_detect(AUDIO_PLUG_DETECT, GPIO.FALLING, callback = audio_plug_insert, bouncetime = 200)
 
-    global player = OMXPlayer(VIDEO_FILE_1)
+    global player
+    player = OMXPlayer(VIDEO_FILE_1)
     player.play()
     # now what ?
     print "started"
