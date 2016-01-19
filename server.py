@@ -257,7 +257,7 @@ if __name__ == "__main__":
     sleep(1)
     player.pause()
 
-    socketio.run(app, debug=True, host='0.0.0.0')
+    #socketio.run(app, debug=True, host='0.0.0.0')
     #threadStart()
 
     while True:
@@ -268,7 +268,7 @@ if __name__ == "__main__":
 		#highbyte = proxSensor2.readU8(0x5E)
 		#byte2 = (highbyte << 3) | lowbyte
 
-		if byte1 < 200: #anything closer?
+		if byte1 < 100: #anything closer?
 			ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
 		else:
 			ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
@@ -277,4 +277,4 @@ if __name__ == "__main__":
 
 
     # When you kill Flask (SIGTERM), clear the trigger for the next thread
-    atexit.register(interrupt)
+    #atexit.register(interrupt)
