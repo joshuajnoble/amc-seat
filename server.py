@@ -257,7 +257,7 @@ if __name__ == "__main__":
     sleep(1)
     player.pause()
 
-    #socketio.run(app, debug=True, host='0.0.0.0')
+    socketio.run(app, host='0.0.0.0')
     #threadStart()
 
     while True:
