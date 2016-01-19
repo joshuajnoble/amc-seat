@@ -111,9 +111,9 @@ def set_color(message):
 
 	if(message['id'] == ID):
 		# huh?
-		ledDriver.setPWM(UPPER_SHELL_RED, message['red'], 100 - message['red'])
-		ledDriver.setPWM(UPPER_SHELL_GREEN, message['green'], 100 - message['green'])
-		ledDriver.setPWM(UPPER_SHELL_BLUE, message['blue'], 100 - message['blue'])
+		ledDriver.setPWM(UPPER_SHELL_RED, message['red'], 4095 - message['red'])
+		ledDriver.setPWM(UPPER_SHELL_GREEN, message['green'], 4095 - message['green'])
+		ledDriver.setPWM(UPPER_SHELL_BLUE, message['blue'], 4095 - message['blue'])
 
 	else:
 		#this sends to everyone, let them figure out who needs what
