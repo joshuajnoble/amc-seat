@@ -258,7 +258,7 @@ if __name__ == "__main__":
     player.pause()
 
     socketio.run(app, debug=True, host='0.0.0.0')
-    threadStart()
+    #threadStart()
 
     while True:
 		lowbyte = proxSensor1.readU8(0x5F)
