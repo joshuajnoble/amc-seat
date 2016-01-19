@@ -25,7 +25,7 @@ GPIO.setmode(GPIO.BOARD)
 
 ID = 1
 
-global player #video
+player = None
 
 
 onTime = 50
