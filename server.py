@@ -276,5 +276,6 @@ if __name__ == "__main__":
 		sleep(0.5)
 
 
+	player.quit()
     # When you kill Flask (SIGTERM), clear the trigger for the next thread
     #atexit.register(interrupt)
