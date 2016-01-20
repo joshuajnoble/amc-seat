@@ -7,6 +7,8 @@ import threading
 import atexit
 from Adafruit_I2C import Adafruit_I2C
 from PWM import PWM
+import signal
+import sys
 
 async_mode = None
 # monkey patching is necessary because this application uses a background
@@ -28,6 +30,11 @@ ID = 1
 global player
 player = None
 
+global occupied
+occupied = False
+
+global firstTrigger
+firstTrigger = True
 
 onTime = 50
 offTime = 50
@@ -54,7 +61,7 @@ GP2Y0E02B = 0x40
 
 proxSensor1 = Adafruit_I2C(GP2Y0E02B)
 VIDEO_FILE_1 = "/home/pi/1-seat-number.m4v"
-
+VIDEO_FILE_2 = "/home/pi/2-welcome.m4v"
 ledDriver = PWM(0x42)
 
 connections = []
@@ -80,6 +87,7 @@ SEAT_OCCUPANCY = 15# GPIO22
 ############################################################
 
 CUPHOLDER_PWM = 12
+CUPHOLDER_2_PWM = 1
 UNDER_SEAT_PWM = 0
 UPPER_SHELL_RED = 8
 UPPER_SHELL_GREEN = 9
@@ -120,18 +128,16 @@ def test_handler(message):
 @socketio.on("set_color")
 def set_color(message):
 
-    if(message['id'] == ID):
- 		mappedRed = translate(message['red'], 0, 255, 0, 4095)
- 		mappedBlue = translate(message['blue'], 0, 255, 0, 4095)
- 		mappedGreen = translate(message['green'], 0, 255, 0, 4095)
-		ledDriver.setPWM(UPPER_SHELL_RED, 4095 - mappedRed, mappedRed)
-		ledDriver.setPWM(UPPER_SHELL_GREEN, 4095 - mappedGreen, mappedGreen)
-		ledDriver.setPWM(UPPER_SHELL_BLUE, 4095 - mappedBlue, mappedBlue)
-    else:
-        #this sends to everyone, let them figure out who needs what
-        emit('set_color', message, broadcast=True)
-
-    print message
+ 	mappedRed = int(translate(message['red'], 0, 255, 0, 4095))
+ 	mappedBlue = int(translate(message['blue'], 0, 255, 0, 4095))
+ 	mappedGreen = int(translate(message['green'], 0, 255, 0, 4095))
+	print "leds"
+	ledDriver.setPWM(UPPER_SHELL_RED, 4095 - mappedRed, mappedRed)
+	ledDriver.setPWM(UPPER_SHELL_GREEN, 4095 - mappedGreen, mappedGreen)
+	ledDriver.setPWM(UPPER_SHELL_BLUE, 4095 - mappedBlue, mappedBlue)
+	#this sends to everyone, let them figure out who needs what
+	emit('set_color', message, broadcast=True)
+	print message
 
 @socketio.on("show_1")
 def show_1(message):
@@ -181,21 +187,22 @@ def interrupt():
 def checkI2C():
     global proximityFlag
     global i2cThread
-
     with dataLock:
-        #set flags for the i2c events detected
-		lowbyte = proxSensor1.readU8(0x5F)
-		highbyte = proxSensor1.readU8(0x5E)
-		byte1 = (highbyte << 3) | lowbyte
-		#lowbyte = proxSensor2.readU8(0x5F)
-		#highbyte = proxSensor2.readU8(0x5E)
-		#byte2 = (highbyte << 3) | lowbyte
+        global firstTrigger
+        global occupied
 
-		if byte1 < 200: #anything closer?
-			ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
-		else:
-			ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
-
+        if occupied == True and firstTrigger == True:
+        	#set flags for the i2c events detected
+			lowbyte = proxSensor1.readU8(0x5F)
+			highbyte = proxSensor1.readU8(0x5E)
+			byte1 = (highbyte << 3) | lowbyte
+			
+			if byte1 < 300: #anything closer?
+				ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
+				sleep(10.0)
+				firstTrigger = False
+			else:
+				ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
 
     i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())
     i2cThread.start()
@@ -211,14 +218,50 @@ def threadStart():
 # gpio
 ########################################################################
 
-def seat_occupied():
-    print "seat occupied"
-    #what happens here?
+def seat_occupied(channel):
+	with dataLock:
+		global occupied	
+		if GPIO.input(SEAT_OCCUPANCY):
 
-def audio_plug_insert():
+			occupied = False
+			lowbyte = proxSensor1.readU8(0x5F)
+			highbyte = proxSensor1.readU8(0x5E)
+			byte1 = (highbyte << 3) | lowbyte
+
+			if byte1 < 300: #anything closer?
+				ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
+				sleep(10.0)
+			else:
+				ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
+
+		else:
+			global player
+			#if player != None:
+			occupied = True
+			player.play_pause()
+			player.quit()
+			sleep(0.5)
+			print "player"
+			player = OMXPlayer(VIDEO_FILE_2, args=['--no-osd', '--no-keys', '-b'])
+			player.play()
+			sleep(1.0)
+			ledDriver.setPWM(CUPHOLDER_PWM, 0, 4095)
+			ledDriver.setPWM(CUPHOLDER_2_PWM, 0, 4095)
+			sleep(5)
+			ledDriver.setPWM(CUPHOLDER_PWM, 4095, 0)
+			ledDriver.setPWM(CUPHOLDER_2_PWM, 4095, 0)
+
+def audio_plug_insert(channel):
     GPIO.output(AUDIO_LED, GPIO.HIGH);
 
-
+def signal_handler(signal, frame):
+	global player
+	player.quit()
+	func = request.environ.get('werkzeug.server.shutdown')
+	if func is None:
+		raise RuntimeError('Not running with the Werkzeug Server')
+	func()
+	sys.exit(0)
 
 #def start_up():
     #player.quit()
@@ -227,6 +270,8 @@ def audio_plug_insert():
     #GPIO.output(PROJECTOR_ON_OFF, GPIO.LOW)
 
 if __name__ == "__main__":
+
+    signal.signal(signal.SIGINT, signal_handler)
    
     ledDriver.setPWM(CUPHOLDER_PWM, 4095, 0)
     ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
@@ -248,30 +293,32 @@ if __name__ == "__main__":
     # pulse 3 times to select HDMIi
     print "pulse for hdmi"
     GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
-    sleep(0.7)
+    sleep(1.0)
     GPIO.output(PROJECTOR_MENU, GPIO.LOW);
-    sleep(0.7)
+    sleep(1.0)
     GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
-    sleep(0.7)
+    sleep(1.0)
     GPIO.output(PROJECTOR_MENU, GPIO.LOW);
-    sleep(0.7)
+    sleep(1.0)
     GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
-    sleep(0.7)
+    sleep(1.0)
     GPIO.output(PROJECTOR_MENU, GPIO.LOW);
-    sleep(3)
+    sleep(3.0)
     
-    GPIO.add_event_detect(SEAT_OCCUPANCY, GPIO.FALLING, callback = seat_occupied, bouncetime = 200)
-    GPIO.add_event_detect(AUDIO_PLUG_DETECT, GPIO.FALLING, callback = audio_plug_insert, bouncetime = 200)
+    GPIO.add_event_detect(SEAT_OCCUPANCY, GPIO.BOTH, callback = seat_occupied, bouncetime = 2000)
+    GPIO.add_event_detect(AUDIO_PLUG_DETECT, GPIO.FALLING, callback = audio_plug_insert, bouncetime = 2000)
 
     global player
-    player = OMXPlayer(VIDEO_FILE_1)
+    player = OMXPlayer(VIDEO_FILE_1, args=['--no-osd', '--no-keys', '-b'])
     player.play()
     # now what ?
     print "started"
     sleep(1)
     player.pause()
 
+    threadStart()
     socketio.run(app, host='0.0.0.0')
+<<<<<<< HEAD
     threadStart()
 
   #   while True:
@@ -289,7 +336,9 @@ if __name__ == "__main__":
 
 		# sleep(0.1)
 
+=======
+    #threadStart()
+>>>>>>> 811a2c7f134bddc24df66d5cfc5d87846becb252
     player.quit()
-    call(["killall", "omxplayer.bin"])
     # When you kill Flask (SIGTERM), clear the trigger for the next thread
     #atexit.register(interrupt)
