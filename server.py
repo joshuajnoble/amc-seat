@@ -17,6 +17,10 @@ async_mode = None
 import eventlet
 eventlet.monkey_patch()
 
+#import gevent
+#from gevent import monkey
+#monkey.patch_all()
+
 import time
 from time import sleep
 from threading import Thread
@@ -125,7 +129,8 @@ def test_handler(message):
     print "TEST WORKS"
     print message + ' '  + str(message['data'])
 
-@socketio.on("reset"):
+@socketio.on("reset")
+def reset_handler():
 	emit("reset", "", broadcast=True)
 	global firstTrigger
 	firstTrigger = True
@@ -134,6 +139,11 @@ def test_handler(message):
 	global player
 	player = OMXPlayer(VIDEO_FILE_1)
 	player.play()
+	sleep(1)
+	player.pause()
+	ledDriver.setPWM(UPPER_SHELL_RED, 0, 4095)
+	ledDriver.setPWM(UPPER_SHELL_GREEN, 0, 4095)
+	ledDriver.setPWM(UPPER_SHELL_BLUE, 0, 4095) 
 
 @socketio.on("set_color")
 def set_color(message):
@@ -231,13 +241,13 @@ def threadStart():
 def seat_occupied(channel):
 	with dataLock:
 		global occupied	
-		if GPIO.input(SEAT_OCCUPANCY):
-
+		if GPIO.input(SEAT_OCCUPANCY) == True:
+			print "not occupied any more"
 			occupied = False
 			lowbyte = proxSensor1.readU8(0x5F)
 			highbyte = proxSensor1.readU8(0x5E)
 			byte1 = (highbyte << 3) | lowbyte
-
+			print "non-occupied distance " + str(byte1)
 			if byte1 < 300: #anything closer?
 				ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
 				sleep(10.0)
@@ -247,19 +257,19 @@ def seat_occupied(channel):
 		else:
 			global player
 			#if player != None:
-			occupied = True
-			player.play_pause()
-			player.quit()
-			sleep(0.5)
-			print "player"
-			player = OMXPlayer(VIDEO_FILE_2, args=['--no-osd', '--no-keys', '-b'])
-			player.play()
-			sleep(1.0)
-			ledDriver.setPWM(CUPHOLDER_PWM, 0, 4095)
-			ledDriver.setPWM(CUPHOLDER_2_PWM, 0, 4095)
-			sleep(5)
-			ledDriver.setPWM(CUPHOLDER_PWM, 4095, 0)
-			ledDriver.setPWM(CUPHOLDER_2_PWM, 4095, 0)
+			if occupied == False:
+				occupied = True
+				player.play_pause()
+				player.quit()
+				sleep(0.5)
+				player = OMXPlayer(VIDEO_FILE_2, args=['--no-osd', '--no-keys', '-b'])
+				player.play()
+				sleep(1.0)
+				ledDriver.setPWM(CUPHOLDER_PWM, 0, 4095)
+				ledDriver.setPWM(CUPHOLDER_2_PWM, 0, 4095)
+				sleep(5)
+				ledDriver.setPWM(CUPHOLDER_PWM, 4095, 0)
+				ledDriver.setPWM(CUPHOLDER_2_PWM, 4095, 0)
 
 def audio_plug_insert(channel):
     GPIO.output(AUDIO_LED, GPIO.HIGH);
@@ -322,7 +332,6 @@ if __name__ == "__main__":
     player = OMXPlayer(VIDEO_FILE_1, args=['--no-osd', '--no-keys', '-b'])
     player.play()
     # now what ?
-    print "started"
     sleep(1)
     player.pause()
 
