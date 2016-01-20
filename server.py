@@ -196,7 +196,7 @@ def checkI2C():
 			lowbyte = proxSensor1.readU8(0x5F)
 			highbyte = proxSensor1.readU8(0x5E)
 			byte1 = (highbyte << 3) | lowbyte
-			
+
 			if byte1 < 300: #anything closer?
 				ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
 				sleep(10.0)
@@ -318,27 +318,7 @@ if __name__ == "__main__":
 
     threadStart()
     socketio.run(app, host='0.0.0.0')
-<<<<<<< HEAD
-    threadStart()
 
-  #   while True:
-		# lowbyte = proxSensor1.readU8(0x5F)
-		# highbyte = proxSensor1.readU8(0x5E)
-		# byte1 = (highbyte << 3) | lowbyte
-		# #lowbyte = proxSensor2.readU8(0x5F)
-		# #highbyte = proxSensor2.readU8(0x5E)
-		# #byte2 = (highbyte << 3) | lowbyte
-
-		# if byte1 < 100: #anything closer?
-		# 	ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
-		# else:
-		# 	ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
-
-		# sleep(0.1)
-
-=======
-    #threadStart()
->>>>>>> 811a2c7f134bddc24df66d5cfc5d87846becb252
     player.quit()
     # When you kill Flask (SIGTERM), clear the trigger for the next thread
     #atexit.register(interrupt)
