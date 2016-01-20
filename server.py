@@ -94,7 +94,9 @@ SEAT_OCCUPANCY = 15# GPIO22
 
 CUPHOLDER_PWM = 12
 CUPHOLDER_2_PWM = 1
-UNDER_SEAT_PWM = 0
+UNDER_SEAT_PWM_R = 0
+UNDER_SEAT_PWM_G = 1
+UNDER_SEAT_PWM_B = 2
 UPPER_SHELL_RED = 8
 UPPER_SHELL_GREEN = 9
 UPPER_SHELL_BLUE = 10
@@ -143,9 +145,12 @@ def reset_handler():
 	player.play()
 	sleep(1)
 	player.pause()
-	ledDriver.setPWM(UPPER_SHELL_RED, 0, 4095)
-	ledDriver.setPWM(UPPER_SHELL_GREEN, 0, 4095)
-	ledDriver.setPWM(UPPER_SHELL_BLUE, 0, 4095) 
+	ledDriver.setPWM(UPPER_SHELL_RED, 4095, 0)
+	ledDriver.setPWM(UPPER_SHELL_GREEN, 4095, 0)
+	ledDriver.setPWM(UPPER_SHELL_BLUE, 4095, 0)
+	ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0) 
+	ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
+	ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
 
 @socketio.on("set_color")
 def set_color(message):
@@ -220,7 +225,7 @@ def static_proxy():
 # 			byte1 = (highbyte << 3) | lowbyte
 
 # 			if byte1 < 300: #anything closer?
-# 				ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
+# 				ledDriver.setPWM(UNDER_SEAT_PWM_R, 0, 4095)
 # 				sleep(10.0)
 # 				firstTrigger = False
 # 			else:
@@ -249,11 +254,15 @@ def checkI2C():
 		byte1 = (highbyte << 3) | lowbyte
 
 		if byte1 < 300: #anything closer?
-			ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
+			ledDriver.setPWM(UNDER_SEAT_PWM_R, 0, 4095)
+			ledDriver.setPWM(UNDER_SEAT_PWM_G, 0, 4095)
+			ledDriver.setPWM(UNDER_SEAT_PWM_B, 0, 4095)
 			sleep(10.0)
 			firstTrigger = False
 		else:
-			ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
 
 	global eventletThread
 	eventletThread = eventlet.spawn(checkI2C)
@@ -265,7 +274,8 @@ def checkI2C():
 
 def seat_occupied(channel):
 	with dataLock:
-		global occupied	
+		global occupied
+		sleep(0.5) #wait 500 millis so we're off the edge	
 		if GPIO.input(SEAT_OCCUPANCY) == True:
 			print "not occupied any more"
 			occupied = False
@@ -274,10 +284,18 @@ def seat_occupied(channel):
 			byte1 = (highbyte << 3) | lowbyte
 			print "non-occupied distance " + str(byte1)
 			if byte1 < 300: #anything closer?
-				ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
+				ledDriver.setPWM(UNDER_SEAT_PWM_R, 0, 4095)
+				ledDriver.setPWM(UNDER_SEAT_PWM_G, 0, 4095)
+				ledDriver.setPWM(UNDER_SEAT_PWM_B, 0, 4095)
 				sleep(10.0)
+				ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
+				ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
+				ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
+
 			else:
-				ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
+				ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
+				ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
+				ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
 
 		else:
 			global player
@@ -320,7 +338,9 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
    
     ledDriver.setPWM(CUPHOLDER_PWM, 4095, 0)
-    ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
+    ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
+    ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
+    ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
     ledDriver.setPWM(UPPER_SHELL_RED, 4095, 0)
     ledDriver.setPWM(UPPER_SHELL_GREEN, 4095, 0)
     ledDriver.setPWM(UPPER_SHELL_BLUE, 4095, 0)
@@ -363,7 +383,7 @@ if __name__ == "__main__":
 
     global eventletThread
     eventletThread = eventlet.spawn(checkI2C)
-    eventletThread.wait()
+    #eventletThread.wait()
 
     socketio.run(app, host='0.0.0.0')
     # When you kill Flask (SIGTERM), clear the trigger for the next thread
