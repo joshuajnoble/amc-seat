@@ -351,8 +351,8 @@ if __name__ == "__main__":
     GPIO.output(PROJECTOR_MENU, GPIO.LOW);
     sleep(3.0)
     
-    GPIO.add_event_detect(SEAT_OCCUPANCY, GPIO.BOTH, callback = seat_occupied, bouncetime = 2000)
-    GPIO.add_event_detect(AUDIO_PLUG_DETECT, GPIO.FALLING, callback = audio_plug_insert, bouncetime = 2000)
+    GPIO.add_event_detect(SEAT_OCCUPANCY, GPIO.BOTH, callback = seat_occupied, bouncetime = 1000)
+    GPIO.add_event_detect(AUDIO_PLUG_DETECT, GPIO.FALLING, callback = audio_plug_insert, bouncetime = 1000)
 
     global player
     player = OMXPlayer(VIDEO_FILE_1, args=['--no-osd', '--no-keys', '-b'])
