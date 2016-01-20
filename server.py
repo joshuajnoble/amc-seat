@@ -40,6 +40,8 @@ occupied = False
 global firstTrigger
 firstTrigger = True
 
+global eventletThread
+
 onTime = 50
 offTime = 50
 
@@ -200,38 +202,62 @@ def static_proxy():
     return "You're a client"
 
 
-def interrupt():
-    global i2cThread
-    i2cThread.cancel()
+# def interrupt():
+#     global i2cThread
+#     i2cThread.cancel()
+
+# def checkI2C():
+#     global proximityFlag
+#     global i2cThread
+#     with dataLock:
+#         global firstTrigger
+#         global occupied
+
+#         if occupied == True and firstTrigger == True:
+#         	#set flags for the i2c events detected
+# 			lowbyte = proxSensor1.readU8(0x5F)
+# 			highbyte = proxSensor1.readU8(0x5E)
+# 			byte1 = (highbyte << 3) | lowbyte
+
+# 			if byte1 < 300: #anything closer?
+# 				ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
+# 				sleep(10.0)
+# 				firstTrigger = False
+# 			else:
+# 				ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
+
+#     i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())
+#     i2cThread.start()
+
+# def threadStart():
+
+#     global i2cThread
+#     i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())
+#     i2cThread.start()
 
 def checkI2C():
-    global proximityFlag
-    global i2cThread
-    with dataLock:
-        global firstTrigger
-        global occupied
 
-        if occupied == True and firstTrigger == True:
-        	#set flags for the i2c events detected
-			lowbyte = proxSensor1.readU8(0x5F)
-			highbyte = proxSensor1.readU8(0x5E)
-			byte1 = (highbyte << 3) | lowbyte
+	eventlet.sleep(0.2)
 
-			if byte1 < 300: #anything closer?
-				ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
-				sleep(10.0)
-				firstTrigger = False
-			else:
-				ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
+    global firstTrigger
+    global occupied
 
-    i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())
-    i2cThread.start()
+	if occupied == True and firstTrigger == True:
+    	#set flags for the i2c events detected
+		lowbyte = proxSensor1.readU8(0x5F)
+		highbyte = proxSensor1.readU8(0x5E)
+		byte1 = (highbyte << 3) | lowbyte
 
-def threadStart():
+		if byte1 < 300: #anything closer?
+			ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
+			sleep(10.0)
+			firstTrigger = False
+		else:
+			ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
 
-    global i2cThread
-    i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())
-    i2cThread.start()
+	global eventletThread
+	eventletThread = eventlet.spawn(checkI2C)
+    eventletThread.wait()
 
 
 ########################################################################
@@ -335,7 +361,10 @@ if __name__ == "__main__":
     sleep(1)
     player.pause()
 
-    threadStart()
+    global eventletThread
+	eventletThread = eventlet.spawn(checkI2C)
+    eventletThread.wait()
+
     socketio.run(app, host='0.0.0.0')
 
     player.quit()
