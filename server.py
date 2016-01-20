@@ -43,7 +43,7 @@ offTime = 50
 # threads
 ########################################################################
 
-POOL_TIME = 0.05 #Seconds for polling
+POOL_TIME = 0.2 #Seconds for polling
 
 # this is where the flags coming from the two motion sensors
 proximityFlag = 0 
@@ -214,7 +214,6 @@ def checkI2C():
 			else:
 				ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
 
-
     i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())
     i2cThread.start()
 
@@ -329,7 +328,7 @@ if __name__ == "__main__":
 
     threadStart()
     socketio.run(app, host='0.0.0.0')
-    #threadStart()
+
     player.quit()
     # When you kill Flask (SIGTERM), clear the trigger for the next thread
     #atexit.register(interrupt)
