@@ -7,6 +7,8 @@ import threading
 import atexit
 from Adafruit_I2C import Adafruit_I2C
 from PWM import PWM
+import signal
+import sys
 
 async_mode = None
 # monkey patching is necessary because this application uses a background
@@ -120,18 +122,16 @@ def test_handler(message):
 @socketio.on("set_color")
 def set_color(message):
 
-    if(message['id'] == ID):
- 		mappedRed = translate(message['red'], 0, 255, 0, 4095)
- 		mappedBlue = translate(message['blue'], 0, 255, 0, 4095)
- 		mappedGreen = translate(message['green'], 0, 255, 0, 4095)
-		ledDriver.setPWM(UPPER_SHELL_RED, 4095 - mappedRed, mappedRed)
-		ledDriver.setPWM(UPPER_SHELL_GREEN, 4095 - mappedGreen, mappedGreen)
-		ledDriver.setPWM(UPPER_SHELL_BLUE, 4095 - mappedBlue, mappedBlue)
-    else:
-        #this sends to everyone, let them figure out who needs what
-        emit('set_color', message, broadcast=True)
-
-    print message
+ 	mappedRed = int(translate(message['red'], 0, 255, 0, 4095))
+ 	mappedBlue = int(translate(message['blue'], 0, 255, 0, 4095))
+ 	mappedGreen = int(translate(message['green'], 0, 255, 0, 4095))
+	print "leds"
+	ledDriver.setPWM(UPPER_SHELL_RED, 4095 - mappedRed, mappedRed)
+	ledDriver.setPWM(UPPER_SHELL_GREEN, 4095 - mappedGreen, mappedGreen)
+	ledDriver.setPWM(UPPER_SHELL_BLUE, 4095 - mappedBlue, mappedBlue)
+	#this sends to everyone, let them figure out who needs what
+	emit('set_color', message, broadcast=True)
+	print message
 
 @socketio.on("show_1")
 def show_1(message):
@@ -187,12 +187,16 @@ def checkI2C():
 		lowbyte = proxSensor1.readU8(0x5F)
 		highbyte = proxSensor1.readU8(0x5E)
 		byte1 = (highbyte << 3) | lowbyte
+		#print byte1
 		#lowbyte = proxSensor2.readU8(0x5F)
 		#highbyte = proxSensor2.readU8(0x5E)
 		#byte2 = (highbyte << 3) | lowbyte
 
-		if byte1 < 200: #anything closer?
-			proximityFlag[0] = 1
+		if byte1 < 300: #anything closer?
+			print "close"
+			ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
+		else:
+			ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
 
 
     i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())
@@ -216,7 +220,10 @@ def seat_occupied():
 def audio_plug_insert():
     GPIO.output(AUDIO_LED, GPIO.HIGH);
 
-
+def signal_handler(signal, frame):
+    global player
+    player.quit()
+    sys.exit(0)
 
 #def start_up():
     #player.quit()
@@ -225,6 +232,8 @@ def audio_plug_insert():
     #GPIO.output(PROJECTOR_ON_OFF, GPIO.LOW)
 
 if __name__ == "__main__":
+
+    signal.signal(signal.SIGINT, signal_handler)
    
     ledDriver.setPWM(CUPHOLDER_PWM, 4095, 0)
     ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
@@ -246,17 +255,17 @@ if __name__ == "__main__":
     # pulse 3 times to select HDMIi
     print "pulse for hdmi"
     GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
-    sleep(0.7)
+    sleep(1.0)
     GPIO.output(PROJECTOR_MENU, GPIO.LOW);
-    sleep(0.7)
+    sleep(1.0)
     GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
-    sleep(0.7)
+    sleep(1.0)
     GPIO.output(PROJECTOR_MENU, GPIO.LOW);
-    sleep(0.7)
+    sleep(1.0)
     GPIO.output(PROJECTOR_MENU, GPIO.HIGH);
-    sleep(0.7)
+    sleep(1.0)
     GPIO.output(PROJECTOR_MENU, GPIO.LOW);
-    sleep(3)
+    sleep(3.0)
     
     GPIO.add_event_detect(SEAT_OCCUPANCY, GPIO.FALLING, callback = seat_occupied, bouncetime = 200)
     GPIO.add_event_detect(AUDIO_PLUG_DETECT, GPIO.FALLING, callback = audio_plug_insert, bouncetime = 200)
@@ -269,13 +278,16 @@ if __name__ == "__main__":
     sleep(1)
     player.pause()
 
+
+    threadStart()
     socketio.run(app, host='0.0.0.0')
     #threadStart()
-
+    '''
     while True:
 		lowbyte = proxSensor1.readU8(0x5F)
 		highbyte = proxSensor1.readU8(0x5E)
 		byte1 = (highbyte << 3) | lowbyte
+		print byte1
 		#lowbyte = proxSensor2.readU8(0x5F)
 		#highbyte = proxSensor2.readU8(0x5E)
 		#byte2 = (highbyte << 3) | lowbyte
@@ -286,8 +298,7 @@ if __name__ == "__main__":
 			ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
 
 		sleep(0.1)
-
+    '''
     player.quit()
-    call(["killall", "omxplayer.bin"])
     # When you kill Flask (SIGTERM), clear the trigger for the next thread
     #atexit.register(interrupt)
