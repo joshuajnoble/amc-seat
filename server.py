@@ -2,7 +2,7 @@ from flask import Flask
 from omxplayer import OMXPlayer
 import RPi.GPIO as GPIO
 import subprocess
-
+from subprocess import call
 import threading
 import atexit
 from Adafruit_I2C import Adafruit_I2C
@@ -25,6 +25,7 @@ GPIO.setmode(GPIO.BOARD)
 
 ID = 1
 
+global player
 player = None
 
 
@@ -84,6 +85,16 @@ UPPER_SHELL_RED = 8
 UPPER_SHELL_GREEN = 9
 UPPER_SHELL_BLUE = 10
 
+def translate(value, leftMin, leftMax, rightMin, rightMax):
+    # Figure out how 'wide' each range is
+    leftSpan = leftMax - leftMin
+    rightSpan = rightMax - rightMin
+
+    # Convert the left range into a 0-1 range (float)
+    valueScaled = float(value - leftMin) / float(leftSpan)
+
+    # Convert the 0-1 range into a value in the right range.
+    return rightMin + (valueScaled * rightSpan)
 
 ########################################################################
 # sockets
@@ -109,17 +120,18 @@ def test_handler(message):
 @socketio.on("set_color")
 def set_color(message):
 
-	if(message['id'] == ID):
-		# huh?
-		ledDriver.setPWM(UPPER_SHELL_RED, message['red'], 4095 - message['red'])
-		ledDriver.setPWM(UPPER_SHELL_GREEN, message['green'], 4095 - message['green'])
-		ledDriver.setPWM(UPPER_SHELL_BLUE, message['blue'], 4095 - message['blue'])
+    if(message['id'] == ID):
+ 		mappedRed = translate(message['red'], 0, 255, 0, 4095)
+ 		mappedBlue = translate(message['blue'], 0, 255, 0, 4095)
+ 		mappedGreen = translate(message['green'], 0, 255, 0, 4095)
+		ledDriver.setPWM(UPPER_SHELL_RED, 4095 - mappedRed, mappedRed)
+		ledDriver.setPWM(UPPER_SHELL_GREEN, 4095 - mappedGreen, mappedGreen)
+		ledDriver.setPWM(UPPER_SHELL_BLUE, 4095 - mappedBlue, mappedBlue)
+    else:
+        #this sends to everyone, let them figure out who needs what
+        emit('set_color', message, broadcast=True)
 
-	else:
-		#this sends to everyone, let them figure out who needs what
-		emit('set_color', message, broadcast=True)
-
-	print message
+    print message
 
 @socketio.on("show_1")
 def show_1(message):
@@ -273,9 +285,9 @@ if __name__ == "__main__":
 		else:
 			ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
 
-		sleep(0.5)
+		sleep(0.1)
 
-
-	player.quit()
+    player.quit()
+    call(["killall", "omxplayer.bin"])
     # When you kill Flask (SIGTERM), clear the trigger for the next thread
     #atexit.register(interrupt)
