@@ -36,7 +36,7 @@ offTime = 50
 # threads
 ########################################################################
 
-POOL_TIME = 0.05 #Seconds for polling
+POOL_TIME = 0.2 #Seconds for polling
 
 # this is where the flags coming from the two motion sensors
 proximityFlag = 0 
@@ -192,7 +192,9 @@ def checkI2C():
 		#byte2 = (highbyte << 3) | lowbyte
 
 		if byte1 < 200: #anything closer?
-			proximityFlag[0] = 1
+			ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
+		else:
+			ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
 
 
     i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())
@@ -270,22 +272,22 @@ if __name__ == "__main__":
     player.pause()
 
     socketio.run(app, host='0.0.0.0')
-    #threadStart()
+    threadStart()
 
-    while True:
-		lowbyte = proxSensor1.readU8(0x5F)
-		highbyte = proxSensor1.readU8(0x5E)
-		byte1 = (highbyte << 3) | lowbyte
-		#lowbyte = proxSensor2.readU8(0x5F)
-		#highbyte = proxSensor2.readU8(0x5E)
-		#byte2 = (highbyte << 3) | lowbyte
+  #   while True:
+		# lowbyte = proxSensor1.readU8(0x5F)
+		# highbyte = proxSensor1.readU8(0x5E)
+		# byte1 = (highbyte << 3) | lowbyte
+		# #lowbyte = proxSensor2.readU8(0x5F)
+		# #highbyte = proxSensor2.readU8(0x5E)
+		# #byte2 = (highbyte << 3) | lowbyte
 
-		if byte1 < 100: #anything closer?
-			ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
-		else:
-			ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
+		# if byte1 < 100: #anything closer?
+		# 	ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
+		# else:
+		# 	ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
 
-		sleep(0.1)
+		# sleep(0.1)
 
     player.quit()
     call(["killall", "omxplayer.bin"])

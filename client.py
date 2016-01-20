@@ -6,6 +6,7 @@ import time
 from Adafruit_I2C import Adafruit_I2C
 from PWM import PWM
 
+global player
 
 ID = 2 #what ID am I?
 
@@ -53,6 +54,7 @@ amcServerIP = '192.168.42.1'
 
 def on_show_video_1(message):
     if(message['id'] == ID):
+    	global player
         if(player):
             player.quit()
         player = OMXPlayer("path/to/file.mp4")
@@ -63,6 +65,7 @@ def on_show_video_1(message):
 def on_show_video_2(message):
 
     if(message['id'] == ID):
+    	global player
         if(player):
             player.quit()
         player = OMXPlayer("path/to/file.mp4")
