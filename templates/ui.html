@@ -29,9 +29,13 @@
 
         $(document).ready( function() {
 	  	    $( '.startBtn' ).click(function() {
-                console.log("ok");
+                //console.log("ok");
 		        
 		    });
+
+            $( '.resetBtn' ).click(function() {
+                socket.emit('reset');
+            });
 
             var cw = Raphael.colorwheel($("#test .colorwheel")[0], 300);
             cw.input($("#test_input")[0]);
@@ -54,6 +58,9 @@
   <body>
     <div class="startBtn">
     	<h1>START</h1>
+    </div>
+    <div class="resetBtn">
+        <h1>RESET</h1>
     </div>
     <div>
     <div id='test'>
