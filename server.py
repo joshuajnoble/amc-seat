@@ -125,6 +125,16 @@ def test_handler(message):
     print "TEST WORKS"
     print message + ' '  + str(message['data'])
 
+@socketio.on("reset"):
+	emit("reset", "", broadcast=True)
+	global firstTrigger
+	firstTrigger = True
+	global occupied
+	occupied = False
+	global player
+	player = OMXPlayer(VIDEO_FILE_1)
+	player.play()
+
 @socketio.on("set_color")
 def set_color(message):
 
