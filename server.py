@@ -239,8 +239,8 @@ def checkI2C():
 
 	eventlet.sleep(0.2)
 
-    global firstTrigger
-    global occupied
+	global firstTrigger
+	global occupied
 
 	if occupied == True and firstTrigger == True:
     	#set flags for the i2c events detected
@@ -257,8 +257,7 @@ def checkI2C():
 
 	global eventletThread
 	eventletThread = eventlet.spawn(checkI2C)
-    eventletThread.wait()
-
+	eventletThread.wait()
 
 ########################################################################
 # gpio
@@ -282,6 +281,7 @@ def seat_occupied(channel):
 
 		else:
 			global player
+			print "occupied"
 			#if player != None:
 			if occupied == False:
 				occupied = True
@@ -362,7 +362,7 @@ if __name__ == "__main__":
     player.pause()
 
     global eventletThread
-	eventletThread = eventlet.spawn(checkI2C)
+    eventletThread = eventlet.spawn(checkI2C)
     eventletThread.wait()
 
     socketio.run(app, host='0.0.0.0')
