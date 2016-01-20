@@ -366,7 +366,5 @@ if __name__ == "__main__":
     eventletThread.wait()
 
     socketio.run(app, host='0.0.0.0')
-
-    player.quit()
     # When you kill Flask (SIGTERM), clear the trigger for the next thread
     #atexit.register(interrupt)
