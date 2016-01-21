@@ -28,9 +28,9 @@
         });
 
         $(document).ready( function() {
-	  	    $( '.startBtn' ).click(function() {
+	  	    $( '.offBtn' ).click(function() {
                 //console.log("ok");
-		        
+		        socket.emit('projector_off');
 		    });
 
             $( '.resetBtn' ).click(function() {
@@ -56,8 +56,8 @@
   </head>
 
   <body>
-    <div class="startBtn">
-    	<h1>START</h1>
+    <div class="offBtn">
+    	<h1>PROJECTOR OFF</h1>
     </div>
     <div class="resetBtn">
         <h1>RESET</h1>

@@ -127,6 +127,14 @@ socketio = SocketIO(app, async_mode='eventlet')
 def error_handler(e):
     print e
 
+@socketio.on("projector_off")
+def projector_off():
+	emit('projector_off', message, broadcast=True)
+    GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH)
+    sleep(1.0)
+    GPIO.output(PROJECTOR_ON_OFF, GPIO.LOW)
+    sleep(1.0)
+
 @socketio.on("connect")
 def connect():
     print "connected"
@@ -169,38 +177,6 @@ def set_color(message):
 	emit('set_color', message, broadcast=True)
 	print message
 
-@socketio.on("show_1")
-def show_1(message):
-
-	if(message['id'] == ID):
-		global player
-		if(player):
-			player.quit()
-		player = OMXPlayer("/home/pi/2-welcome.m4v")
-
-	else:
-		#this sends to everyone, let them figure out who needs what
-		emit('show_1', message, broadcast=True)
-
-	print message
-
-
-@socketio.on("show_2")
-def show_2(message):
-
-	if(message['id'] == ID):
-		global player
-		if(player):
-			player.quit()
-		player = OMXPlayer("path/to/file.mp4")
-
-	else:
-		#this sends to everyone, let them figure out who needs what
-		emit('show_2', message, broadcast=True)
-
-	print message
-
-
 @app.route('/ui') #this doesn't work, goes to '/ui/' and 404s
 def route_ui():
     return render_template('ui.html');
@@ -208,40 +184,6 @@ def route_ui():
 @app.route('/client')
 def static_proxy():
     return "You're a client"
-
-
-# def interrupt():
-#     global i2cThread
-#     i2cThread.cancel()
-
-# def checkI2C():
-#     global proximityFlag
-#     global i2cThread
-#     with dataLock:
-#         global firstTrigger
-#         global occupied
-
-#         if occupied == True and firstTrigger == True:
-#         	#set flags for the i2c events detected
-# 			lowbyte = proxSensor1.readU8(0x5F)
-# 			highbyte = proxSensor1.readU8(0x5E)
-# 			byte1 = (highbyte << 3) | lowbyte
-
-# 			if byte1 < 300: #anything closer?
-# 				ledDriver.setPWM(UNDER_SEAT_PWM_R, 0, 4095)
-# 				sleep(10.0)
-# 				firstTrigger = False
-# 			else:
-# 				ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
-
-#     i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())
-#     i2cThread.start()
-
-# def threadStart():
-
-#     global i2cThread
-#     i2cThread  = threading.Timer(POOL_TIME, checkI2C, ())
-#     i2cThread.start()
 
 def checkI2C():
 
@@ -254,7 +196,7 @@ def checkI2C():
 
 		if occupied == True and firstTrigger == True:
 	    	#set flags for the i2c events detected
-		sleep(0.5) #wait 500 millis so we're off the edge	
+		eventlet.sleep(0.5) #wait 500 millis so we're off the edge	
 		if GPIO.input(SEAT_OCCUPANCY) == True:
 			print "not occupied any more"
 			firstTrigger = True
@@ -277,7 +219,7 @@ def checkI2C():
 
 	global eventletThread
 	eventletThread = eventlet.spawn(checkI2C)
-	eventletThread.wait()
+	#eventletThread.wait()
 
 
 def underSeatOff():
@@ -293,7 +235,7 @@ def underSeatOff():
 def seat_occupied(channel):
 	global occupied
 	global running_seat_occupied
-	seat_occupied = True
+	running_seat_occupied = True
 	sleep(0.5) #wait 500 millis so we're off the edge	
 	if GPIO.input(SEAT_OCCUPANCY) == True:
 		print "not occupied any more"
