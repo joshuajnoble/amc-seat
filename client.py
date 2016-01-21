@@ -141,10 +141,15 @@ def seat_occupied(channel):
 			ledDriver.setPWM(UNDER_SEAT_PWM_B, 0, 4095)
 
 			sleep(10.0)
+			
+			ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
+		
 		else:
 			ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
-			ledDriver.setPWM(UNDER_SEAT_PWM_G, 0, 4095)
-			ledDriver.setPWM(UNDER_SEAT_PWM_B, 0, 4095)
+			ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
 
 	else:
 		global player
@@ -193,11 +198,17 @@ def checkI2C():
         byte1 = (highbyte << 3) | lowbyte
 
         if byte1 < 300: #anything closer?
-            ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
-            sleep(10.0)
-            firstTrigger = False
+             ledDriver.setPWM(UNDER_SEAT_PWM_R, 0, 4095)
+             ledDriver.setPWM(UNDER_SEAT_PWM_G, 0, 4095)
+             ledDriver.setPWM(UNDER_SEAT_PWM_B, 0, 4095)
+             sleep(10.0)
+             ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
+             ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
+             ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
+            
+             firstTrigger = False
         else:
-            ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
+            ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
 
     global eventletThread
     eventletThread = eventlet.spawn(checkI2C)
@@ -209,34 +220,21 @@ def checkI2C():
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
-    print "starting up"
-    socketIO = SocketIO('192.168.42.1', 5000, LoggingNamespace)
-    print socketIO.connected
-    conn = socketIO.connected
-    while conn == False:
-         print "not connected"
-         sleep(2.0)
-         socketIO = SocketIO('192.168.42.1', 5000, LoggingNamespace)
-         conn = socketIO.connected
-
-    socketIO.on("reset", reset_handler)
-    socketIO.on("set_color", set_color)  
-
- 
+  
     ledDriver.setPWM(CUPHOLDER_PWM, 4095, 0)
+    ledDriver.setPWM(CUPHOLDER_2_PWM, 4095, 0)
     ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
     ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
     ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
     ledDriver.setPWM(UPPER_SHELL_RED, 4095, 0)
     ledDriver.setPWM(UPPER_SHELL_GREEN, 4095, 0)
     ledDriver.setPWM(UPPER_SHELL_BLUE, 4095, 0)
-
     GPIO.setup(PROJECTOR_MENU, GPIO.OUT)
     GPIO.setup(PROJECTOR_ON_OFF, GPIO.OUT)
     GPIO.setup(AUDIO_LED, GPIO.OUT)
     GPIO.setup(AUDIO_PLUG_DETECT, GPIO.IN, pull_up_down = GPIO.PUD_UP)
     GPIO.setup(SEAT_OCCUPANCY, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-
+    
     GPIO.output(PROJECTOR_MENU, GPIO.LOW)
     GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH)
     sleep(1.0)
@@ -256,17 +254,27 @@ if __name__ == "__main__":
     sleep(1.0)
     GPIO.output(PROJECTOR_MENU, GPIO.LOW);
     sleep(3.0)
-    
+        
     GPIO.add_event_detect(SEAT_OCCUPANCY, GPIO.BOTH, callback = seat_occupied, bouncetime = 1000)
     GPIO.add_event_detect(AUDIO_PLUG_DETECT, GPIO.FALLING, callback = audio_plug_insert, bouncetime = 1000)
 
-    #global player
-    #player = OMXPlayer(VIDEO_FILE_1, args=['--no-osd', '--no-keys', '-b'])
-    #player.play()
+    global player
+    player = OMXPlayer(VIDEO_FILE_1, args=['--no-osd', '--no-keys', '-b'])
+    player.play()
     # now what ?
-    #sleep(1)
-    #player.pause()
+    sleep(1)
+    player.pause()
 
     global eventletThread
     eventletThread = eventlet.spawn(checkI2C)
-    eventletThread.wait()
+    #eventletThread.wait()
+    
+    print "starting up"
+    socketIO = SocketIO('192.168.42.1', 5000, LoggingNamespace)
+    print socketIO.connected
+    while socketIO.connected == False:
+         print "not connected"
+         sleep(2.0)
+         socketIO = SocketIO('192.168.42.1', 5000, LoggingNamespace)
+
+    socketIO.wait()
