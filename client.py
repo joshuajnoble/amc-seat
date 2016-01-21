@@ -1,8 +1,9 @@
 from socketIO_client import SocketIO, LoggingNamespace
-
+import RPi.GPIO as GPIO
 import thread
+from time import sleep
 import time
-
+from omxplayer import OMXPlayer
 import eventlet
 eventlet.monkey_patch()
 
@@ -25,15 +26,20 @@ ID = 2 #what ID am I?
 onTime = 50
 offTime = 50
 
+VIDEO_FILE_1 = "/home/pi/1-seat-number.m4v"
+VIDEO_FILE_2 = "/home/pi/2-welcome.m4v"
+
 ############################################################
 # gpio
 ############################################################
 
-PROJECTOR_ON_OFF = 5
-PROJECTOR_MENU = 6
-AUDIO_LED = 25
-AUDIO_PLUG_DETECT = 12
-SEAT_OCCUPANCY = 22
+GPIO.setmode(GPIO.BOARD)
+
+PROJECTOR_ON_OFF = 29
+PROJECTOR_MENU = 31
+AUDIO_LED = 22
+AUDIO_PLUG_DETECT = 32
+SEAT_OCCUPANCY = 15
 
 ############################################################
 # pwm via PCA9685
@@ -90,7 +96,6 @@ def set_color(message):
     ledDriver.setPWM(UPPER_SHELL_GREEN, message['green'], 4095 - message['green'])
     ledDriver.setPWM(UPPER_SHELL_BLUE, message['blue'], 4095 - message['blue'])
 
-
 def reset_handler():
 	emit("reset", "", broadcast=True)
 	global firstTrigger
@@ -102,9 +107,12 @@ def reset_handler():
 	player.play()
 	sleep(1)
 	player.pause()
-	ledDriver.setPWM(UPPER_SHELL_RED, 0, 4095)
-	ledDriver.setPWM(UPPER_SHELL_GREEN, 0, 4095)
-	ledDriver.setPWM(UPPER_SHELL_BLUE, 0, 4095) 
+	ledDriver.setPWM(UPPER_SHELL_RED, 4095, 0)
+	ledDriver.setPWM(UPPER_SHELL_GREEN, 4095, 0)
+	ledDriver.setPWM(UPPER_SHELL_BLUE, 4095, 0)
+	ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0) 
+	ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
+	ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
 
 
 ########################################################################
@@ -112,7 +120,8 @@ def reset_handler():
 ########################################################################
 
 def seat_occupied(channel):
-	global occupied	
+	global occupied
+	sleep(0.5)	
 	if GPIO.input(SEAT_OCCUPANCY) == True:
 		print "not occupied any more"
 		occupied = False
@@ -159,40 +168,45 @@ def signal_handler(signal, frame):
 
 def checkI2C():
 
-	eventlet.sleep(0.2)
+    eventlet.sleep(0.2)
 
     global firstTrigger
     global occupied
 
-	if occupied == True and firstTrigger == True:
+    if occupied == True and firstTrigger == True:
     	#set flags for the i2c events detected
-		lowbyte = proxSensor1.readU8(0x5F)
-		highbyte = proxSensor1.readU8(0x5E)
-		byte1 = (highbyte << 3) | lowbyte
+        lowbyte = proxSensor1.readU8(0x5F)
+        highbyte = proxSensor1.readU8(0x5E)
+        byte1 = (highbyte << 3) | lowbyte
 
-		if byte1 < 300: #anything closer?
-			ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
-			sleep(10.0)
-			firstTrigger = False
-		else:
-			ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
+        if byte1 < 300: #anything closer?
+            ledDriver.setPWM(UNDER_SEAT_PWM, 0, 4095)
+            sleep(10.0)
+            firstTrigger = False
+        else:
+            ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
 
-	global eventletThread
-	eventletThread = eventlet.spawn(checkI2C)
+    global eventletThread
+    eventletThread = eventlet.spawn(checkI2C)
     eventletThread.wait()
 
 
 if __name__ == "__main__":
     print "starting up"
     socketIO = SocketIO('192.168.42.1', 5000, LoggingNamespace)
-    print socketIO.connected()
-    while socketIO.connected() == False:
+    print socketIO.connected
+    conn = socketIO.connected
+    while conn == False:
          print "not connected"
          sleep(2.0)
          socketIO = SocketIO('192.168.42.1', 5000, LoggingNamespace)
+         conn = socketIO.connected
 
-   
-	ledDriver.setPWM(CUPHOLDER_PWM, 4095, 0)
+    socketIO.on("reset", reset_handler)
+    socketIO.on("set_color", set_color)  
+
+ 
+    ledDriver.setPWM(CUPHOLDER_PWM, 4095, 0)
     ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
     ledDriver.setPWM(UPPER_SHELL_RED, 4095, 0)
     ledDriver.setPWM(UPPER_SHELL_GREEN, 4095, 0)
@@ -235,5 +249,5 @@ if __name__ == "__main__":
     player.pause()
 
     global eventletThread
-	eventletThread = eventlet.spawn(checkI2C)
-    eventletThread.wait()
+    eventletThread = eventlet.spawn(checkI2C)
+    #eventletThread.wait()
