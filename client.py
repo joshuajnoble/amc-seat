@@ -193,33 +193,35 @@ def signal_handler(signal, frame):
 def checkI2C():
 
 	sleep(0.5)
-    with dataLock:
+	with dataLock:
 
-	    global firstTrigger
-	    global occupied
+		global firstTrigger
+		global occupied
 
-	    if occupied == True and firstTrigger == True:
-	    	#set flags for the i2c events detected
-	        lowbyte = proxSensor1.readU8(0x5F)
-	        highbyte = proxSensor1.readU8(0x5E)
-	        byte1 = (highbyte << 3) | lowbyte
+		if occupied == True and firstTrigger == True:
+			#set flags for the i2c events detected
+			lowbyte = proxSensor1.readU8(0x5F)
+			highbyte = proxSensor1.readU8(0x5E)
+			byte1 = (highbyte << 3) | lowbyte
 
-	        if byte1 < 300: #anything closer?
-	             ledDriver.setPWM(UNDER_SEAT_PWM_R, 0, 4095)
-	             ledDriver.setPWM(UNDER_SEAT_PWM_G, 0, 4095)
-	             ledDriver.setPWM(UNDER_SEAT_PWM_B, 0, 4095)
-	             sleep(10.0)
-	             ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
-	             ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
-	             ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
-	            
-	             firstTrigger = False
-	        else:
-	            ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
+			if byte1 < 300: #anything closer?
+			ledDriver.setPWM(UNDER_SEAT_PWM_R, 0, 4095)
+			ledDriver.setPWM(UNDER_SEAT_PWM_G, 0, 4095)
+			ledDriver.setPWM(UNDER_SEAT_PWM_B, 0, 4095)
+			sleep(10.0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
+
+			firstTrigger = False
+		else:
+			ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
 
 	global i2cThread
 	i2cThread = Thread(target=checkI2C)
-    i2cThread.start()
+	i2cThread.start()
 
 
 
