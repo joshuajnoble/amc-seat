@@ -183,14 +183,6 @@ def checkI2C():
 
 
 if __name__ == "__main__":
-    print "starting up"
-    socketIO = SocketIO('192.168.42.1', 5000, LoggingNamespace)
-    print socketIO.connected()
-    while socketIO.connected() == False:
-         print "not connected"
-         sleep(2.0)
-         socketIO = SocketIO('192.168.42.1', 5000, LoggingNamespace)
-
    
 	ledDriver.setPWM(CUPHOLDER_PWM, 4095, 0)
     ledDriver.setPWM(UNDER_SEAT_PWM, 4095, 0)
@@ -236,4 +228,13 @@ if __name__ == "__main__":
 
     global eventletThread
 	eventletThread = eventlet.spawn(checkI2C)
-    eventletThread.wait()
+    #eventletThread.wait()
+    print "starting up"
+    socketIO = SocketIO('192.168.42.1', 5000, LoggingNamespace)
+    print socketIO.connected()
+    while socketIO.connected() == False:
+         print "not connected"
+         sleep(2.0)
+         socketIO = SocketIO('192.168.42.1', 5000, LoggingNamespace)
+
+    socketIO.wait()
