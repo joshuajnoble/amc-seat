@@ -4,7 +4,7 @@ import thread
 from time import sleep
 import time
 from omxplayer import OMXPlayer
-
+import os
 import signal
 
 import eventlet
@@ -220,7 +220,8 @@ def checkI2C():
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
-  
+    
+    os.system("clear screen")
     ledDriver.setPWM(CUPHOLDER_PWM, 4095, 0)
     ledDriver.setPWM(CUPHOLDER_2_PWM, 4095, 0)
     ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
