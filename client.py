@@ -1,14 +1,16 @@
 from socketIO_client import SocketIO, LoggingNamespace
 import RPi.GPIO as GPIO
 import thread
+import threading
+from threading import Thread
 from time import sleep
 import time
 from omxplayer import OMXPlayer
 
 import signal
 
-import eventlet
-eventlet.monkey_patch()
+#import eventlet
+#eventlet.monkey_patch()
 
 from Adafruit_I2C import Adafruit_I2C
 from PWM import PWM
@@ -23,6 +25,11 @@ global firstTrigger
 firstTrigger = True
 
 global eventletThread
+
+# lock to control access to variable
+dataLock = threading.Lock()
+# thread handler
+i2cThread = threading.Thread()
 
 ID = 2 #what ID am I?
 
@@ -131,6 +138,7 @@ def seat_occupied(channel):
 	if GPIO.input(SEAT_OCCUPANCY) == True:
 		print "not occupied any more"
 		occupied = False
+		firstTrigger = False
 		lowbyte = proxSensor1.readU8(0x5F)
 		highbyte = proxSensor1.readU8(0x5E)
 		byte1 = (highbyte << 3) | lowbyte
@@ -186,34 +194,36 @@ def signal_handler(signal, frame):
 
 def checkI2C():
 
-    eventlet.sleep(0.2)
+	sleep(0.5)
+	with dataLock:
 
-    global firstTrigger
-    global occupied
+		global firstTrigger
+		global occupied
 
-    if occupied == True and firstTrigger == True:
-    	#set flags for the i2c events detected
-        lowbyte = proxSensor1.readU8(0x5F)
-        highbyte = proxSensor1.readU8(0x5E)
-        byte1 = (highbyte << 3) | lowbyte
+		if occupied == True and firstTrigger == True:
+			#set flags for the i2c events detected
+			lowbyte = proxSensor1.readU8(0x5F)
+			highbyte = proxSensor1.readU8(0x5E)
+			byte1 = (highbyte << 3) | lowbyte
 
-        if byte1 < 300: #anything closer?
-             ledDriver.setPWM(UNDER_SEAT_PWM_R, 0, 4095)
-             ledDriver.setPWM(UNDER_SEAT_PWM_G, 0, 4095)
-             ledDriver.setPWM(UNDER_SEAT_PWM_B, 0, 4095)
-             sleep(10.0)
-             ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
-             ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
-             ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
-            
-             firstTrigger = False
-        else:
-            ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
+			if byte1 < 300: #anything closer?
+			    ledDriver.setPWM(UNDER_SEAT_PWM_R, 0, 4095)
+			    ledDriver.setPWM(UNDER_SEAT_PWM_G, 0, 4095)
+			    ledDriver.setPWM(UNDER_SEAT_PWM_B, 0, 4095)
+			    sleep(10.0)
+			    ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
+			    ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
+			    ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
 
-    global eventletThread
-    eventletThread = eventlet.spawn(checkI2C)
-    eventletThread.wait()
+			    firstTrigger = False
+		else:
+			ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
 
+	global i2cThread
+	i2cThread = Thread(target=checkI2C)
+	i2cThread.start()
 
 
 
@@ -265,9 +275,13 @@ if __name__ == "__main__":
     sleep(1)
     player.pause()
 
-    global eventletThread
-    eventletThread = eventlet.spawn(checkI2C)
+    #global eventletThread
+    #eventletThread = eventlet.spawn(checkI2C)
     #eventletThread.wait()
+
+    global i2cThread
+    i2cThread = Thread(target=checkI2C)
+    i2cThread.start()
     
     print "starting up"
     socketIO = SocketIO('192.168.42.1', 5000, LoggingNamespace)
