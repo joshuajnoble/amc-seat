@@ -28,14 +28,17 @@
         });
 
         $(document).ready( function() {
-	  	    $( '.startBtn' ).click(function() {
+	  	    $( '.offBtn' ).click(function() {
                 //console.log("ok");
-		        
+		        socket.emit('projector_off');
 		    });
 
             $( '.resetBtn' ).click(function() {
                 socket.emit('reset');
             });
+			$('.poweroffBtn').click(function() {
+				socket.emit('power_off');
+			});
 
             var cw = Raphael.colorwheel($("#test .colorwheel")[0], 300);
             //cw.input($("#test_input")[0]);
@@ -56,12 +59,18 @@
   </head>
 
   <body>
-    <div class="startBtn">
-    	<h1>START</h1>
+    <div class="offBtn">
+    	<h1>PROJECTOR OFF</h1>
     </div>
-    <div class="resetBtn">
+	<br/>
+    <div class="poweroffBtn">
+        <h1>REBOOT</h1>
+    </div>
+	<br/>
+   <div class="resetBtn">
         <h1>RESET</h1>
     </div>
+	<br/>
     <div>
     <div id='test'>
         <div class='colorwheel'/>

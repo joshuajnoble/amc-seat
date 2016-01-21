@@ -127,6 +127,12 @@ def reset_handler():
 	ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
 	ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
 
+def projector_off_handler():
+    GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH)
+    sleep(1.0)
+    GPIO.output(PROJECTOR_ON_OFF, GPIO.LOW)
+    sleep(1.0)
+
 
 ########################################################################
 # gpio
@@ -290,5 +296,8 @@ if __name__ == "__main__":
          print "not connected"
          sleep(2.0)
          socketIO = SocketIO('192.168.42.1', 5000, LoggingNamespace)
+
+    socketIO.on('reset', reset_handler)
+    socketIO.on('projector_off', projector_off_handler)
 
     socketIO.wait()
