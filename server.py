@@ -257,7 +257,7 @@ def checkI2C():
 			ledDriver.setPWM(UNDER_SEAT_PWM_R, 0, 4095)
 			ledDriver.setPWM(UNDER_SEAT_PWM_G, 0, 4095)
 			ledDriver.setPWM(UNDER_SEAT_PWM_B, 0, 4095)
-			sleep(10.0)
+			sleep(5.0)
 			firstTrigger = False
 		else:
 			ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
