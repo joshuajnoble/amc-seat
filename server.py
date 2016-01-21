@@ -31,6 +31,9 @@ GPIO.setmode(GPIO.BOARD)
 
 ID = 1
 
+global running_seat_occupied
+running_seat_occupied = False
+
 global player
 player = None
 
@@ -244,25 +247,27 @@ def checkI2C():
 
 	eventlet.sleep(0.2)
 
-	global firstTrigger
-	global occupied
+	global running_seat_occupied
+	if running_seat_occupied == False:
+		global firstTrigger
+		global occupied
 
-	if occupied == True and firstTrigger == True:
-    	#set flags for the i2c events detected
-		lowbyte = proxSensor1.readU8(0x5F)
-		highbyte = proxSensor1.readU8(0x5E)
-		byte1 = (highbyte << 3) | lowbyte
+		if occupied == True and firstTrigger == True:
+	    	#set flags for the i2c events detected
+			lowbyte = proxSensor1.readU8(0x5F)
+			highbyte = proxSensor1.readU8(0x5E)
+			byte1 = (highbyte << 3) | lowbyte
 
-		if byte1 < 300: #anything closer?
-			ledDriver.setPWM(UNDER_SEAT_PWM_R, 0, 4095)
-			ledDriver.setPWM(UNDER_SEAT_PWM_G, 0, 4095)
-			ledDriver.setPWM(UNDER_SEAT_PWM_B, 0, 4095)
-			sleep(10.0)
-			firstTrigger = False
-		else:
-			ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
-			ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
-			ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
+			if byte1 < 300: #anything closer?
+				ledDriver.setPWM(UNDER_SEAT_PWM_R, 0, 4095)
+				ledDriver.setPWM(UNDER_SEAT_PWM_G, 0, 4095)
+				ledDriver.setPWM(UNDER_SEAT_PWM_B, 0, 4095)
+				sleep(10.0)
+				firstTrigger = False
+			else:
+				ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
+				ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
+				ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
 
 	global eventletThread
 	eventletThread = eventlet.spawn(checkI2C)
@@ -273,47 +278,49 @@ def checkI2C():
 ########################################################################
 
 def seat_occupied(channel):
-	with dataLock:
-		global occupied
-		sleep(0.5) #wait 500 millis so we're off the edge	
-		if GPIO.input(SEAT_OCCUPANCY) == True:
-			print "not occupied any more"
-			occupied = False
-			lowbyte = proxSensor1.readU8(0x5F)
-			highbyte = proxSensor1.readU8(0x5E)
-			byte1 = (highbyte << 3) | lowbyte
-			print "non-occupied distance " + str(byte1)
-			if byte1 < 300: #anything closer?
-				ledDriver.setPWM(UNDER_SEAT_PWM_R, 0, 4095)
-				ledDriver.setPWM(UNDER_SEAT_PWM_G, 0, 4095)
-				ledDriver.setPWM(UNDER_SEAT_PWM_B, 0, 4095)
-				sleep(10.0)
-				ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
-				ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
-				ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
-
-			else:
-				ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
-				ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
-				ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
+	global occupied
+	global running_seat_occupied
+	seat_occupied = True
+	sleep(0.5) #wait 500 millis so we're off the edge	
+	if GPIO.input(SEAT_OCCUPANCY) == True:
+		print "not occupied any more"
+		occupied = False
+		lowbyte = proxSensor1.readU8(0x5F)
+		highbyte = proxSensor1.readU8(0x5E)
+		byte1 = (highbyte << 3) | lowbyte
+		print "non-occupied distance " + str(byte1)
+		if byte1 < 300: #anything closer?
+			ledDriver.setPWM(UNDER_SEAT_PWM_R, 0, 4095)
+			ledDriver.setPWM(UNDER_SEAT_PWM_G, 0, 4095)
+			ledDriver.setPWM(UNDER_SEAT_PWM_B, 0, 4095)
+			sleep(10.0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
 
 		else:
-			global player
-			print "occupied"
-			#if player != None:
-			if occupied == False:
-				occupied = True
-				player.play_pause()
-				player.quit()
-				sleep(0.5)
-				player = OMXPlayer(VIDEO_FILE_2, args=['--no-osd', '--no-keys', '-b'])
-				player.play()
-				sleep(1.0)
-				ledDriver.setPWM(CUPHOLDER_PWM, 0, 4095)
-				ledDriver.setPWM(CUPHOLDER_2_PWM, 0, 4095)
-				sleep(5)
-				ledDriver.setPWM(CUPHOLDER_PWM, 4095, 0)
-				ledDriver.setPWM(CUPHOLDER_2_PWM, 4095, 0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
+			ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
+
+	else:
+		global player
+		print "occupied"
+		#if player != None:
+		if occupied == False:
+			occupied = True
+			player.play_pause()
+			player.quit()
+			sleep(0.5)
+			player = OMXPlayer(VIDEO_FILE_2, args=['--no-osd', '--no-keys', '-b'])
+			player.play()
+			sleep(1.0)
+			ledDriver.setPWM(CUPHOLDER_PWM, 0, 4095)
+			ledDriver.setPWM(CUPHOLDER_2_PWM, 0, 4095)
+			sleep(5)
+			ledDriver.setPWM(CUPHOLDER_PWM, 4095, 0)
+			ledDriver.setPWM(CUPHOLDER_2_PWM, 4095, 0)
+	running_seat_occupied = False
 
 def audio_plug_insert(channel):
     GPIO.output(AUDIO_LED, GPIO.HIGH);
