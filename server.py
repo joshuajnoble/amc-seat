@@ -93,7 +93,7 @@ SEAT_OCCUPANCY = 15# GPIO22
 ############################################################
 
 CUPHOLDER_PWM = 12
-CUPHOLDER_2_PWM = 1
+CUPHOLDER_2_PWM = 13
 UNDER_SEAT_PWM_R = 0
 UNDER_SEAT_PWM_G = 1
 UNDER_SEAT_PWM_B = 2
@@ -278,6 +278,7 @@ def seat_occupied(channel):
 		sleep(0.5) #wait 500 millis so we're off the edge	
 		if GPIO.input(SEAT_OCCUPANCY) == True:
 			print "not occupied any more"
+			firstTrigger = True
 			occupied = False
 			lowbyte = proxSensor1.readU8(0x5F)
 			highbyte = proxSensor1.readU8(0x5E)
@@ -309,9 +310,15 @@ def seat_occupied(channel):
 				player = OMXPlayer(VIDEO_FILE_2, args=['--no-osd', '--no-keys', '-b'])
 				player.play()
 				sleep(1.0)
+				ledDriver.setPWM(UNDER_SEAT_PWM_R, 0, 4095)
+				ledDriver.setPWM(UNDER_SEAT_PWM_G, 0, 4095)
+				ledDriver.setPWM(UNDER_SEAT_PWM_B, 0, 4095)
 				ledDriver.setPWM(CUPHOLDER_PWM, 0, 4095)
 				ledDriver.setPWM(CUPHOLDER_2_PWM, 0, 4095)
 				sleep(5)
+				ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
+				ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
+				ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
 				ledDriver.setPWM(CUPHOLDER_PWM, 4095, 0)
 				ledDriver.setPWM(CUPHOLDER_2_PWM, 4095, 0)
 
@@ -320,6 +327,7 @@ def audio_plug_insert(channel):
 
 def signal_handler(signal, frame):
 	global player
+	GPIO.cleanup()
 	player.quit()
 	func = request.environ.get('werkzeug.server.shutdown')
 	if func is None:
@@ -338,6 +346,7 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
    
     ledDriver.setPWM(CUPHOLDER_PWM, 4095, 0)
+    ledDriver.setPWM(CUPHOLDER_2_PWM, 4095, 0)
     ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
     ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
     ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
