@@ -133,6 +133,12 @@ def projector_off_handler():
     GPIO.output(PROJECTOR_ON_OFF, GPIO.LOW)
     sleep(1.0)
 
+def poweroff_handler():
+	GPIO.output(PROJECTOR_ON_OFF, GPIO.HIGH)
+	sleep(1.0)
+	GPIO.output(PROJECTOR_ON_OFF, GPIO.LOW)
+	sleep(5.0)
+	call(["sudo", "reboot"])
 
 ########################################################################
 # gpio
@@ -299,5 +305,6 @@ if __name__ == "__main__":
 
     socketIO.on('reset', reset_handler)
     socketIO.on('projector_off', projector_off_handler)
+    socketIO.on('power_off', poweroff_handler)
 
     socketIO.wait()
