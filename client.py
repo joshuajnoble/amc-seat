@@ -1,6 +1,7 @@
 from socketIO_client import SocketIO, LoggingNamespace
 import RPi.GPIO as GPIO
 import thread
+import threading
 from threading import Thread
 from time import sleep
 import time
@@ -137,6 +138,7 @@ def seat_occupied(channel):
 	if GPIO.input(SEAT_OCCUPANCY) == True:
 		print "not occupied any more"
 		occupied = False
+		firstTrigger = False
 		lowbyte = proxSensor1.readU8(0x5F)
 		highbyte = proxSensor1.readU8(0x5E)
 		byte1 = (highbyte << 3) | lowbyte
@@ -205,15 +207,15 @@ def checkI2C():
 			byte1 = (highbyte << 3) | lowbyte
 
 			if byte1 < 300: #anything closer?
-			ledDriver.setPWM(UNDER_SEAT_PWM_R, 0, 4095)
-			ledDriver.setPWM(UNDER_SEAT_PWM_G, 0, 4095)
-			ledDriver.setPWM(UNDER_SEAT_PWM_B, 0, 4095)
-			sleep(10.0)
-			ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
-			ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
-			ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
+			    ledDriver.setPWM(UNDER_SEAT_PWM_R, 0, 4095)
+			    ledDriver.setPWM(UNDER_SEAT_PWM_G, 0, 4095)
+			    ledDriver.setPWM(UNDER_SEAT_PWM_B, 0, 4095)
+			    sleep(10.0)
+			    ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
+			    ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
+			    ledDriver.setPWM(UNDER_SEAT_PWM_B, 4095, 0)
 
-			firstTrigger = False
+			    firstTrigger = False
 		else:
 			ledDriver.setPWM(UNDER_SEAT_PWM_R, 4095, 0)
 			ledDriver.setPWM(UNDER_SEAT_PWM_G, 4095, 0)
@@ -278,7 +280,7 @@ if __name__ == "__main__":
     #eventletThread.wait()
 
     global i2cThread
-	i2cThread = Thread(target=checkI2C)
+    i2cThread = Thread(target=checkI2C)
     i2cThread.start()
     
     print "starting up"
