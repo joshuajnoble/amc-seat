@@ -38,6 +38,7 @@ offTime = 50
 
 VIDEO_FILE_1 = "/home/pi/1-seat-number.m4v"
 VIDEO_FILE_2 = "/home/pi/2-welcome.m4v"
+VIDEO_FILE_3 = "/home/pi/whole-clip.m4v"
 
 ############################################################
 # gpio
@@ -116,7 +117,7 @@ def reset_handler():
 	global occupied
 	occupied = False
 	global player
-	player = OMXPlayer(VIDEO_FILE_1)
+	player = OMXPlayer(VIDEO_FILE_3,  args=['--no-osd', '--no-keys', '-b'])
 	player.play()
 	sleep(1)
 	player.pause()
@@ -176,11 +177,11 @@ def seat_occupied(channel):
 		#if player != None:
 		if occupied == False:
 			occupied = True
-			if player != None:
-				player.play_pause()
-				player.quit()
-				sleep(0.5)
-			player = OMXPlayer(VIDEO_FILE_2, args=['--no-osd', '--no-keys', '-b'])
+			#if player != None:
+			#	player.play_pause()
+			#	player.quit()
+			#	sleep(0.5)
+			#player = OMXPlayer(VIDEO_FILE_2, args=['--no-osd', '--no-keys', '-b'])
 			player.play()
 			sleep(1.0)
 			ledDriver.setPWM(CUPHOLDER_PWM, 0, 4095)
@@ -281,7 +282,7 @@ if __name__ == "__main__":
     GPIO.add_event_detect(AUDIO_PLUG_DETECT, GPIO.FALLING, callback = audio_plug_insert, bouncetime = 1000)
 
     global player
-    player = OMXPlayer(VIDEO_FILE_1, args=['--no-osd', '--no-keys', '-b'])
+    player = OMXPlayer(VIDEO_FILE_3, args=['--no-osd', '--no-keys', '-b'])
     player.play()
     # now what ?
     sleep(1)
